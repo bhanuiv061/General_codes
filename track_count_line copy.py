@@ -178,10 +178,18 @@ class UniqueObjectCounter:
         areaA = (A[2]-A[0])*(A[3]-A[1])
         areaB = (B[2]-B[0])*(B[3]-B[1])
         return inter / (areaA + areaB - inter + 1e-6)
+    
 
     def get_counts(self):
-        return {self.class_names[c]: len(ids) for c, ids in self.counted_ids.items()}
-
+        result = {}
+        for c, ids in self.counted_ids.items():
+            if c in self.class_names:
+                name = self.class_names[c]
+            else:
+                print(f"[WARNING] Unknown class ID: {c}")
+                name = f"class_{c}"
+            result[name] = len(ids)
+        return result
 # ---------------- LINE COUNTER ----------------
 class LineCounter:
     def __init__(self, line_position, mode="both"):
@@ -262,6 +270,7 @@ def run(weights, source, line_mode, project, name, conf_thres, iou_thres, view_i
             if len(det):
                 det[:, :4] = scale_boxes(img.shape[2:], det[:, :4], frame.shape).round()
                 for *xyxy, conf, cls in det:
+                    print(f"[DEBUG] Detected class: {int(cls)}")
                     x1, y1, x2, y2 = map(float, xyxy)
                     detections_for_sort.append([x1, y1, x2, y2, float(conf)])
                     yolo_dets.append([x1, y1, x2, y2, float(conf), int(cls)])
