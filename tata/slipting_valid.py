@@ -89,7 +89,7 @@
 #         print(f"⚠️ Label missing for {img_file}")
 
 # -------------------------------------------------------------------------------------
-#test
+# test
 # import os
 # import shutil
 # import random
@@ -138,40 +138,10 @@
 #         print(f"⚠️ Label missing for {img_file}")
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import os
-import shutil
 import random
+import shutil
+
 from tqdm import tqdm
 
 """
@@ -224,10 +194,7 @@ os.makedirs(TEST_LBL, exist_ok=True)
 # Collect all image files
 # =========================
 # Reads all images with valid extensions from the images folder
-image_files = [
-    f for f in os.listdir(IMAGES_DIR)
-    if f.lower().endswith((".jpg", ".png", ".jpeg"))
-]
+image_files = [f for f in os.listdir(IMAGES_DIR) if f.lower().endswith((".jpg", ".png", ".jpeg"))]
 
 # Shuffle images to ensure random distribution
 random.shuffle(image_files)
@@ -255,10 +222,7 @@ for img_file in tqdm(train_files, desc="Moving TRAIN files"):
     lbl_file = os.path.splitext(img_file)[0] + ".txt"
 
     # Move image to train/images
-    shutil.move(
-        os.path.join(IMAGES_DIR, img_file),
-        os.path.join(TRAIN_IMG, img_file)
-    )
+    shutil.move(os.path.join(IMAGES_DIR, img_file), os.path.join(TRAIN_IMG, img_file))
 
     # Move label to train/labels if it exists
     lbl_src = os.path.join(LABELS_DIR, lbl_file)
@@ -275,10 +239,7 @@ for img_file in tqdm(test_files, desc="Moving TEST files"):
     lbl_file = os.path.splitext(img_file)[0] + ".txt"
 
     # Move image to valid/images
-    shutil.move(
-        os.path.join(IMAGES_DIR, img_file),
-        os.path.join(TEST_IMG, img_file)
-    )
+    shutil.move(os.path.join(IMAGES_DIR, img_file), os.path.join(TEST_IMG, img_file))
 
     # Move label to valid/labels if it exists
     lbl_src = os.path.join(LABELS_DIR, lbl_file)

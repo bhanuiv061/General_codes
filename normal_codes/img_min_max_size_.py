@@ -1,7 +1,8 @@
 import os
+
 from PIL import Image
 
-folder_path = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\TATA_V3_HIMALAYA\image_data_\masked_rcnn_op_+paricle\train\images"
+folder_path = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\TATA_V3_HIMALAYA\image_data_\masked_rcnn_op_+particle\train\images"
 
 image_sizes = []
 

@@ -1,11 +1,12 @@
-import cv2
 import os
+
+import cv2
 
 # Input video path
 video_path = r"C:\Users\IVTRNE26\Downloads\op_flat_7.avi"
 
 # Output folder
-file_name="op1"
+file_name = "op1"
 output_folder = r"C:\imagevision projects\tata\floating_video\op"
 os.makedirs(output_folder, exist_ok=True)
 

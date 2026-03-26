@@ -17,7 +17,7 @@
 # out.release()
 
 
-#"D:\bhanu\tata_paid_demo\gp_particles\raw_test\MV-CS032-60GC (DA5392478)\gp_paricle20250711152724053.avi"
+# "D:\bhanu\tata_paid_demo\gp_particles\raw_test\MV-CS032-60GC (DA5392478)\gp_paricle20250711152724053.avi"
 
 
 # import cv2
@@ -35,23 +35,10 @@
 #     cv2.imwrite(img_path, rotated)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+import glob
+import os
 
 import cv2
-import os
-import glob
 
 # Input image folder
 input_folder = r"c:\Users\IVTRNE26\Downloads\cut_mark_2_22-09 (2)\cut_mark_2_22-09"
