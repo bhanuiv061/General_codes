@@ -1,9 +1,7 @@
 import argparse
 import csv
-from pathlib import Path
 from datetime import datetime
-
-import torch
+from pathlib import Path
 
 # YOLOv5 imports
 from models.common import DetectMultiBackend
@@ -30,25 +28,21 @@ def write_log_csv(weights_path, model, stride, recommended_imgsz, device):
 
         # Write header if first time
         if not file_exists:
-            writer.writerow([
-                "timestamp",
-                "weights_path",
-                "device",
-                "num_classes",
-                "class_names",
-                "stride",
-                "recommended_imgsz"
-            ])
+            writer.writerow(
+                ["timestamp", "weights_path", "device", "num_classes", "class_names", "stride", "recommended_imgsz"]
+            )
 
-        writer.writerow([
-            datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            str(weights_path),
-            str(device),
-            len(model.names),
-            ", ".join(model.names.values()) if isinstance(model.names, dict) else model.names,
-            stride,
-            recommended_imgsz
-        ])
+        writer.writerow(
+            [
+                datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                str(weights_path),
+                str(device),
+                len(model.names),
+                ", ".join(model.names.values()) if isinstance(model.names, dict) else model.names,
+                stride,
+                recommended_imgsz,
+            ]
+        )
 
     print(f"\n📝 Log saved to: {log_path}")
 
@@ -110,15 +104,10 @@ def verify_weights(weights):
 # --------------------------------------------------
 def parse_opt():
     parser = argparse.ArgumentParser(description="YOLOv5 .pt weight verifier with folder logging")
-    parser.add_argument(
-        "--weights",
-        type=str,
-        required=True,
-        help="Path to YOLOv5 .pt file"
-    )
+    parser.add_argument("--weights", type=str, required=True, help="Path to YOLOv5 .pt file")
     return parser.parse_args()
 
 
 if __name__ == "__main__":
     opt = parse_opt()
-    verify_weights(opt.weights) 
+    verify_weights(opt.weights)
