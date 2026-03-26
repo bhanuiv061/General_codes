@@ -24,12 +24,14 @@ CREATE_BACKUP = True
 # Helper
 # =========================
 
+
 def is_int(value):
     try:
         int(value)
         return True
     except ValueError:
         return False
+
 
 # =========================
 # Process files
@@ -45,13 +47,13 @@ for file in os.listdir(labels_dir):
     if CREATE_BACKUP:
         backup_path = file_path + ".bak"
         if not os.path.exists(backup_path):
-            with open(file_path, "r") as f:
+            with open(file_path) as f:
                 with open(backup_path, "w") as bf:
                     bf.write(f.read())
 
     updated_lines = []
 
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         for line in f:
             line = line.strip()
 

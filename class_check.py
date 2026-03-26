@@ -1,8 +1,9 @@
-import torch
-import sys
 import os
 import pathlib
+import sys
 from pathlib import Path
+
+import torch
 
 # ================= WINDOWS PATH FIX =================
 temp = pathlib.PosixPath
@@ -16,7 +17,9 @@ if str(ROOT) not in sys.path:
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))
 
 # ================= LOAD WEIGHTS =================
-weights = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\Packaging\Crown\engineering\poc_\models\best 9.pt"
+weights = (
+    r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\Packaging\Crown\engineering\poc_\models\best 9.pt"
+)
 
 ckpt = torch.load(weights, map_location="cpu")
 

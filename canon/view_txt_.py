@@ -53,12 +53,9 @@
 # cv2.destroyAllWindows()
 
 
-
-
-
+import os
 
 import cv2
-import os
 import numpy as np
 
 image_dir = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\Canon\engineering\image_json\images"
@@ -81,7 +78,7 @@ for img_name in os.listdir(image_dir):
     img = cv2.imread(img_path)
     h, w = img.shape[:2]
 
-    with open(label_path, "r") as f:
+    with open(label_path) as f:
         lines = f.readlines()
 
     for line in lines:

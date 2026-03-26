@@ -1,16 +1,17 @@
 import argparse
 import csv
 import os
-import platform
-import sys
-from pathlib import Path
-from datetime import datetime
 import pathlib
-import cv2
-import torch
-import numpy as np
-from sort.sort import Sort
+import sys
 import time
+from datetime import datetime
+from pathlib import Path
+
+import cv2
+import numpy as np
+import torch
+from sort.sort import Sort
+
 start_time = time.time()
 
 # Fix Windows path issue
@@ -23,15 +24,12 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))
 
-from utils.dataloaders import IMG_FORMATS, VID_FORMATS, LoadImages, LoadStreams
 from ultralytics.utils.plotting import Annotator
+
 from models.common import DetectMultiBackend
+from utils.dataloaders import IMG_FORMATS, VID_FORMATS, LoadImages, LoadStreams
 from utils.general import (
-    LOGGER,
-    Profile,
-    check_file,
     check_img_size,
-    check_imshow,
     check_requirements,
     increment_path,
     non_max_suppression,
@@ -75,8 +73,7 @@ def run(
         y = (h + text_size[1]) // 2
 
         watermark_layer = np.zeros_like(frame, dtype=np.uint8)
-        cv2.putText(watermark_layer, text, (x, y),
-                    cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness, cv2.LINE_AA)
+        cv2.putText(watermark_layer, text, (x, y), cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness, cv2.LINE_AA)
 
         center = (w // 2, h // 2)
         matrix = cv2.getRotationMatrix2D(center, 30, 1.0)
@@ -84,6 +81,7 @@ def run(
 
         cv2.addWeighted(rotated, opacity, overlay, 1 - opacity, 0, overlay)
         return overlay
+
     def print_progress(frame_idx, counts):
         elapsed = time.time() - start_time
         fps = frame_idx / elapsed if elapsed > 0 else 0
@@ -92,6 +90,7 @@ def run(
         count_str = " | ".join([f"{k}:{v}" for k, v in counts.items()])
         msg = f"\r🎯 Frame: {frame_idx} | FPS: {fps:.2f} | Total: {total} | {count_str}"
         print(msg, end="", flush=True)
+
     # ---------------- LOGO ----------------
     def add_logo_top_left(frame, logo_path="logo_white 1.png", width=120):
         if not os.path.exists(logo_path):
@@ -111,12 +110,12 @@ def run(
         if logo.shape[2] == 4:
             alpha = logo[:, :, 3] / 255.0
             for c in range(3):
-                frame[y_offset:y_offset+new_h, x_offset:x_offset+width, c] = (
-                    alpha * logo[:, :, c] +
-                    (1 - alpha) * frame[y_offset:y_offset+new_h, x_offset:x_offset+width, c]
+                frame[y_offset : y_offset + new_h, x_offset : x_offset + width, c] = (
+                    alpha * logo[:, :, c]
+                    + (1 - alpha) * frame[y_offset : y_offset + new_h, x_offset : x_offset + width, c]
                 )
         else:
-            frame[y_offset:y_offset+new_h, x_offset:x_offset+width] = logo[:, :, :3]
+            frame[y_offset : y_offset + new_h, x_offset : x_offset + width] = logo[:, :, :3]
 
         return frame
 
@@ -132,7 +131,7 @@ def run(
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         with open(csv_file, mode="a", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow([timestamp, frame_num] + list(counts.values()))
+            writer.writerow([timestamp, frame_num, *list(counts.values())])
 
     def is_crossing_line(prev_y, curr_y):
         return prev_y < line_y <= curr_y or prev_y > line_y >= curr_y
@@ -146,11 +145,15 @@ def run(
     counts = init_class_counter(names)
 
     source = str(source)
-    save_img = not nosave and not source.endswith(".txt")
+    not nosave and not source.endswith(".txt")
     is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
     webcam = source.isnumeric() and not is_file
 
-    dataset = LoadStreams(source, img_size=imgsz, stride=stride, auto=pt) if webcam else LoadImages(source, img_size=imgsz, stride=stride, auto=pt)
+    dataset = (
+        LoadStreams(source, img_size=imgsz, stride=stride, auto=pt)
+        if webcam
+        else LoadImages(source, img_size=imgsz, stride=stride, auto=pt)
+    )
 
     tracker = Sort()
     prev_centroids = {}
@@ -161,18 +164,17 @@ def run(
     video_path = str(save_dir / "output.mp4")
     video_writer = None
 
-
     csv_file = os.path.join(str(save_dir), f"log_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv")
     with open(csv_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["timestamp", "frame"] + list(counts.keys()))
+        writer.writerow(["timestamp", "frame", *list(counts.keys())])
     # ---------------- LOOP ----------------
     import time
+
     start_time = time.time()
 
     try:
         for frame_idx, (path, im, im0s, vid_cap, s) in enumerate(dataset):
-
             im = torch.from_numpy(im).to(device).float() / 255.0
             if len(im.shape) == 3:
                 im = im[None]
@@ -187,12 +189,7 @@ def run(
             if video_writer is None:
                 h, w = im0.shape[:2]
                 fps = vid_cap.get(cv2.CAP_PROP_FPS) if vid_cap else 30
-                video_writer = cv2.VideoWriter(
-                    video_path,
-                    cv2.VideoWriter_fourcc(*'mp4v'),
-                    fps,
-                    (w, h)
-                )
+                video_writer = cv2.VideoWriter(video_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
             detections = []
             if len(pred[0]):
@@ -210,7 +207,7 @@ def run(
                 detected_cls_id = -1
 
                 for *xyxy, conf, cls in pred[0]:
-                    px1, py1, px2, py2 = map(int, xyxy)
+                    px1, py1, _px2, _py2 = map(int, xyxy)
                     if abs(x1 - px1) < 10 and abs(y1 - py1) < 10:
                         detected_class = names[int(cls)] if int(cls) in names else "unknown"
                         detected_cls_id = int(cls)
@@ -226,7 +223,7 @@ def run(
             for obj_id, (cx, cy, cls) in current_centroids.items():
                 if obj_id in prev_centroids:
                     if is_crossing_line(prev_centroids[obj_id][1], cy):
-                        if cls in counts:   # prevent crash
+                        if cls in counts:  # prevent crash
                             counts[cls] += 1
 
             prev_centroids = current_centroids.copy()
@@ -236,8 +233,9 @@ def run(
             # -------- DISPLAY COUNTS --------
             y_offset = 220
             for cls_name, count in counts.items():
-                cv2.putText(im0, f"{cls_name}: {count}", (20, y_offset),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2)
+                cv2.putText(
+                    im0, f"{cls_name}: {count}", (20, y_offset), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 255), 2
+                )
                 y_offset += 35
 
             im0 = add_logo_top_left(im0)
@@ -254,8 +252,7 @@ def run(
             fps_live = frame_idx / elapsed if elapsed > 0 else 0
             total = sum(counts.values())
             count_str = " | ".join([f"{k}:{v}" for k, v in counts.items()])
-            print(f"\r🎯 Frame: {frame_idx} | FPS: {fps_live:.2f} | Total: {total} | {count_str}",
-                  end="", flush=True)
+            print(f"\r🎯 Frame: {frame_idx} | FPS: {fps_live:.2f} | Total: {total} | {count_str}", end="", flush=True)
 
             cv2.imshow("Counting", im0)
             if cv2.waitKey(1) == ord("q"):
