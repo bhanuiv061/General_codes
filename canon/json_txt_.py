@@ -1,5 +1,6 @@
 import json
 import os
+
 from PIL import Image
 
 # ---------- paths ----------
@@ -10,15 +11,10 @@ output_dir = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\personal_project
 os.makedirs(output_dir, exist_ok=True)
 
 # ---------- class mapping ----------
-class_map = {
-    "ironing": 0,
-    "iron_board": 1,
-    "iron_box": 2
-}
+class_map = {"ironing": 0, "iron_board": 1, "iron_box": 2}
 
 # ---------- process json ----------
 for json_file in os.listdir(json_dir):
-
     if not json_file.endswith(".json"):
         continue
 
@@ -42,13 +38,12 @@ for json_file in os.listdir(json_dir):
     img_w, img_h = img.size
 
     # load json
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         data = json.load(f)
 
     yolo_lines = []
 
     for shape in data.get("shapes", []):
-
         label = shape["label"]
 
         if label not in class_map:

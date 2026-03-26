@@ -5,7 +5,7 @@
 
 # # ================= CONFIG ================= #
 # # INPUT_SOURCE = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\Pictures\Camera Roll\WIN_20260211_14_17_28_Pro.jpg"   # image | video | rtsp | 0
-# INPUT_SOURCE = 0 
+# INPUT_SOURCE = 0
 # SAVE_ROOT = "camera_events"
 # SAVE_ORIGINAL = os.path.join(SAVE_ROOT, "original")
 # SAVE_BW = os.path.join(SAVE_ROOT, "bw")
@@ -169,35 +169,6 @@
 # cv2.destroyAllWindows()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # import cv2
 
 # # -------- CONFIG --------
@@ -249,8 +220,6 @@
 #         break
 
 # cv2.destroyAllWindows()
-
-
 
 
 # import cv2
@@ -419,86 +388,6 @@
 
 # cap.release()
 # cv2.destroyAllWindows()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # import cv2
@@ -670,16 +559,6 @@
 # cv2.destroyAllWindows()
 
 
-
-
-
-
-
-
-
-
-
-
 # import cv2
 # import numpy as np
 
@@ -734,29 +613,6 @@
 # cv2.imshow("Dark Mask", dark_mask)
 # cv2.waitKey(0)
 # cv2.destroyAllWindows()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # import cv2
@@ -825,8 +681,6 @@
 # cv2.destroyAllWindows()
 
 
-
-
 # import cv2
 # import numpy as np
 
@@ -893,22 +747,16 @@
 # cv2.destroyAllWindows()
 
 
-
-
-
-
-
-
+import time
 
 import cv2
 import numpy as np
-import time
 
 # ================= CONFIG =================
-VIDEO_SOURCE = 0              # 0 = webcam | "video.mp4" | RTSP URL
-DARK_RANGE = (0, 100)         # Dark intensity range
-DARK_THRESHOLD = 20.0         # Percent
-FREEZE_TIMEOUT = 1.0          # Seconds (FPS = 0 condition)
+VIDEO_SOURCE = 0  # 0 = webcam | "video.mp4" | RTSP URL
+DARK_RANGE = (0, 100)  # Dark intensity range
+DARK_THRESHOLD = 20.0  # Percent
+FREEZE_TIMEOUT = 1.0  # Seconds (FPS = 0 condition)
 # =========================================
 
 
@@ -918,7 +766,7 @@ def analyze_frame(frame):
     # -------- Screen Off Check --------
     min_val = int(gray.min())
     max_val = int(gray.max())
-    screen_off = (min_val == max_val)
+    screen_off = min_val == max_val
 
     # -------- Dark Area Check --------
     dark_mask = cv2.inRange(gray, DARK_RANGE[0], DARK_RANGE[1])
@@ -941,19 +789,16 @@ def visualize(frame, dark_mask, status, dark_percent, fps):
         "VIDEO FREEZE": (0, 0, 255),
         "SCREEN OFF": (0, 165, 255),
         "CAMERA COVERED": (0, 0, 255),
-        "NORMAL": (0, 255, 0)
+        "NORMAL": (0, 255, 0),
     }
 
     color = color_map[status]
 
-    cv2.putText(vis, f"STATUS: {status}", (20, 40),
-                cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 3)
+    cv2.putText(vis, f"STATUS: {status}", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, color, 3)
 
-    cv2.putText(vis, f"Dark Area: {dark_percent:.1f}%",
-                (20, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
+    cv2.putText(vis, f"Dark Area: {dark_percent:.1f}%", (20, 90), cv2.FONT_HERSHEY_SIMPLEX, 0.9, color, 2)
 
-    cv2.putText(vis, f"FPS: {fps:.2f}",
-                (20, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 0), 2)
+    cv2.putText(vis, f"FPS: {fps:.2f}", (20, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.9, (255, 255, 0), 2)
 
     return vis
 

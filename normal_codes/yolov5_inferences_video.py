@@ -20,18 +20,18 @@
 #     text_size = 1.2  # Slightly smaller watermark
 #     thickness = 3
 #     color = (255, 255, 255)
- 
+
 #     text_width, text_height = cv2.getTextSize(text, cv2.FONT_HERSHEY_COMPLEX, text_size, thickness)[0]
 #     text_x = (frame.shape[1] - text_width) // 2
 #     text_y = (frame.shape[0] + text_height) // 2
- 
+
 #     watermark = np.zeros_like(frame, dtype=np.uint8)
 #     cv2.putText(watermark, text, (text_x, text_y), cv2.FONT_HERSHEY_COMPLEX, text_size, color, thickness, cv2.LINE_AA)
- 
+
 #     center = (frame.shape[1] // 2, frame.shape[0] // 2)
 #     rotation_matrix = cv2.getRotationMatrix2D(center, angle=30, scale=1)
 #     rotated_watermark = cv2.warpAffine(watermark, rotation_matrix, (frame.shape[1], frame.shape[0]))
- 
+
 #     cv2.addWeighted(rotated_watermark, opacity, frame, 1 - opacity, 0, frame)
 #     return frame
 
@@ -40,26 +40,26 @@
 #     """Adds the resized logo to the top-left corner of the black bar."""
 #     if logo is None:
 #         return frame  # Skip if logo is not found
- 
+
 #     # Resize the logo to the specified width, keeping aspect ratio
 #     h_logo, w_logo = logo.shape[:2]
 #     aspect_ratio = h_logo / w_logo
 #     new_height = int(logo_width * aspect_ratio)
 #     resized_logo = cv2.resize(logo, (logo_width, new_height))
- 
+
 #     x_offset = 10  # Left margin
 #     y_offset = 35  # Adjusted to fit small black bar
- 
+
 #     # Ensure logo has alpha (transparency)
-#     if resized_logo.shape[2] == 4:  
+#     if resized_logo.shape[2] == 4:
 #         alpha = resized_logo[:, :, 3] / 255.0  # Extract alpha channel
-#         for c in range(3):  
+#         for c in range(3):
 #             frame[y_offset:y_offset + new_height, x_offset:x_offset + logo_width, c] = (
 #                 alpha * resized_logo[:, :, c] + (1 - alpha) * frame[y_offset:y_offset + new_height, x_offset:x_offset + logo_width, c]
 #             )
 #     else:  # If no transparency, just overlay
 #         frame[y_offset:y_offset + new_height, x_offset:x_offset + logo_width] = resized_logo[:, :, :3]
- 
+
 #     return frame
 
 # # Function to create a black bar with text
@@ -116,13 +116,7 @@
 # print("Inference complete. Video saved as:", output_video)
 
 
-
-
-
-
-
 ##working_yolov5 infernces code
-
 
 
 # import torch
@@ -231,24 +225,11 @@
 # print("Inference complete. Video saved as:", output_video)
 
 
+import pathlib
 
-
-
-
-
-
-
-
-
-
-
-
-
-import torch
-from yolov5 import YOLOv5  # Import the YOLOv5 class from the YOLOv5 package
 import cv2
 import numpy as np
-import pathlib
+from yolov5 import YOLOv5  # Import the YOLOv5 class from the YOLOv5 package
 
 # Switch to WindowsPath if needed (based on your platform)
 temp = pathlib.PosixPath
@@ -258,7 +239,9 @@ pathlib.PosixPath = pathlib.WindowsPath
 model = YOLOv5(r"C:\Users\iv061\Downloads\sharpv2_500.pt", device="cpu")  # or use 'cuda' for GPU
 
 # Open the video for inference
-input_video = r"D:\bhanu\sharp_blisters\output_videos\cracks\input_video\output_video.mp4"  # Replace with your input video file
+input_video = (
+    r"D:\bhanu\sharp_blisters\output_videos\cracks\input_video\output_video.mp4"  # Replace with your input video file
+)
 cap = cv2.VideoCapture(input_video)
 
 # Get video properties
@@ -268,11 +251,12 @@ fps = cap.get(cv2.CAP_PROP_FPS)
 
 # Output video writer setup
 output_video = r"D:\bhanu\sharp_blisters\output_videos\cracks\cracks\output_video_with_watermark.mp4"  # Update the output path here
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for .mp4
+fourcc = cv2.VideoWriter_fourcc(*"mp4v")  # Codec for .mp4
 out = cv2.VideoWriter(output_video, fourcc, fps, (frame_width, frame_height))
 
 # Load logo (optional)
-logo = cv2.imread('.\logo_black.png', cv2.IMREAD_UNCHANGED)  # Replace with your logo path
+logo = cv2.imread(".\logo_black.png", cv2.IMREAD_UNCHANGED)  # Replace with your logo path
+
 
 # Function to add watermark
 def add_watermark(frame, text="Demonstration Only", opacity=0.15):
@@ -297,6 +281,7 @@ def add_watermark(frame, text="Demonstration Only", opacity=0.15):
     cv2.addWeighted(rotated_watermark, opacity, overlay, 1 - opacity, 0, overlay)
     return overlay
 
+
 # Function to add logo
 def add_logo(frame, logo, logo_width=150):
     if logo is None:
@@ -314,13 +299,15 @@ def add_logo(frame, logo, logo_width=150):
     if resized_logo.shape[2] == 4:  # If logo has transparency
         alpha = resized_logo[:, :, 3] / 255.0  # Extract alpha channel
         for c in range(3):  # Blend the logo with the frame based on transparency
-            frame[y_offset:y_offset + new_height, x_offset:x_offset + logo_width, c] = (
-                alpha * resized_logo[:, :, c] + (1 - alpha) * frame[y_offset:y_offset + new_height, x_offset:x_offset + logo_width, c]
+            frame[y_offset : y_offset + new_height, x_offset : x_offset + logo_width, c] = (
+                alpha * resized_logo[:, :, c]
+                + (1 - alpha) * frame[y_offset : y_offset + new_height, x_offset : x_offset + logo_width, c]
             )
     else:  # If no transparency, just overlay the logo
-        frame[y_offset:y_offset + new_height, x_offset:x_offset + logo_width] = resized_logo[:, :, :3]
+        frame[y_offset : y_offset + new_height, x_offset : x_offset + logo_width] = resized_logo[:, :, :3]
 
     return frame
+
 
 # Process each frame of the video
 while cap.isOpened():
@@ -333,10 +320,10 @@ while cap.isOpened():
 
     # Get the predictions in pandas dataframe format
     predictions = results.pandas().xyxy[0]
-    
+
     # Draw bounding boxes on the frame
     for _, pred in predictions.iterrows():
-        xmin, ymin, xmax, ymax = int(pred['xmin']), int(pred['ymin']), int(pred['xmax']), int(pred['ymax'])
+        xmin, ymin, xmax, ymax = int(pred["xmin"]), int(pred["ymin"]), int(pred["xmax"]), int(pred["ymax"])
         cv2.rectangle(frame, (xmin, ymin), (xmax, ymax), (0, 0, 255), 2)  # Red color (0, 0, 255)
 
     # Add watermark
