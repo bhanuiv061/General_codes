@@ -1,4 +1,5 @@
 import os
+
 from PIL import Image
 
 # Folder path
@@ -9,7 +10,7 @@ output_folder = os.path.join(folder, "rotated")
 os.makedirs(output_folder, exist_ok=True)
 
 # Rotation angle (change as needed: 90, 180, 270, etc.)
-angle = 90  
+angle = 90
 
 # Supported image formats
 valid_extensions = (".jpg", ".jpeg", ".png", ".bmp", ".tiff")

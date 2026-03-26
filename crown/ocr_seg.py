@@ -1,17 +1,16 @@
 import argparse
-import sys
-import time
-import traceback
-from pathlib import Path
-import cv2
-import torch
-import numpy as np
 import os
 import pathlib
-from tqdm import tqdm
-import signal
-import easyocr
 import re
+import signal
+import sys
+from pathlib import Path
+
+import cv2
+import easyocr
+import numpy as np
+import torch
+from tqdm import tqdm
 
 # ================= WINDOWS PATH FIX =================
 temp = pathlib.PosixPath
@@ -25,12 +24,13 @@ if str(ROOT) not in sys.path:
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))
 
 # ================= YOLOv5 SEG =================
+from sort.sort import Sort
+
 from models.common import DetectMultiBackend
 from utils.dataloaders import LoadImages, LoadStreams
 from utils.general import check_img_size, non_max_suppression, scale_boxes
 from utils.segment.general import process_mask
 from utils.torch_utils import select_device, smart_inference_mode
-from sort.sort import Sort
 
 # ================= CONFIG =================
 LINE_X = 800
@@ -43,16 +43,18 @@ STOP_REQUESTED = False
 OCR_CLASSES = {"label"}
 
 CLASS_COLORS = {
-    "label":   (0, 255, 0),       # Green
-    "caution": (0, 165, 255),     # Orange
-    "crown":   (128, 0, 128),     # Purple
-    "up":      (255, 255, 0),     # Cyan
-    "box":     (200, 200, 200),   # Grey
-    "overlap": (0, 0, 255),       # Red
+    "label": (0, 255, 0),  # Green
+    "caution": (0, 165, 255),  # Orange
+    "crown": (128, 0, 128),  # Purple
+    "up": (255, 255, 0),  # Cyan
+    "box": (200, 200, 200),  # Grey
+    "overlap": (0, 0, 255),  # Red
 }
+
 
 def get_class_color(cls_name):
     return CLASS_COLORS.get(cls_name, (255, 255, 255))  # white fallback
+
 
 # ================= OCR CONFIG =================
 # Normalized text (uppercased, no spaces/hyphens) → display name
@@ -61,23 +63,18 @@ EXPECTED_LABEL_TEXTS = {
     "UN3481": "UN3481 - Lithium Battery (With Equipment)",
     "UN3480": "UN3480 - Lithium Battery (Standalone)",
     "UN1066": "UN1066 - Nitrogen Compressed",
-
     # Lithium battery text variants
     "LITHIUMIONBATTERIES": "LITHIUM ION BATTERIES",
     "LITHIUMIONBATTERIESFORBIDDENFORTRANSPORTABOARDPASSENGERAIRCRAFT": "LITHIUM ION BATTERIES",
-
     # Battery / spill labels
     "NONSPILLABLEBATTERY": "NONSPILLABLE BATTERY",
-
     # Fragile
     "FRAGILE": "FRAGILE",
-
     # Nitrogen / gas labels
     "NITROGENCOMPRESSED": "NITROGEN COMPRESSED",
     "NONFLAMMABLEGAS": "NON-FLAMMABLE GAS",
     "DOTSP10898": "DOT-SP 10898",
     "NITROGENHYDRAULICACCUMULATORS": "NITROGEN HYDRAULIC ACCUMULATORS",
-
     # Facilities
     "FACILITIESMAINTENANCEUSE": "FACILITIES MAINTENANCE USE",
 }
@@ -88,7 +85,8 @@ UN_DESCRIPTIONS = {
     "UN1066": "Nitrogen, Compressed",
 }
 
-ocr_reader = easyocr.Reader(['en'], gpu=False)
+ocr_reader = easyocr.Reader(["en"], gpu=False)
+
 
 # ================= SIGNAL =================
 def request_stop(sig=None, frame=None):
@@ -96,15 +94,20 @@ def request_stop(sig=None, frame=None):
     STOP_REQUESTED = True
     print("\n⚠ Exit requested — finalizing safely...")
 
+
 signal.signal(signal.SIGINT, request_stop)
 signal.signal(signal.SIGTERM, request_stop)
+
 
 # ================= UTILITIES =================
 def normalize_text(text):
     return text.upper().replace(" ", "").replace("-", "").replace("_", "")
 
+
 def draw_text_with_gold_box(
-    img, text, pos,
+    img,
+    text,
+    pos,
     font=cv2.FONT_HERSHEY_SIMPLEX,
     font_scale=0.6,
     text_color=(255, 255, 255),
@@ -112,31 +115,28 @@ def draw_text_with_gold_box(
     border_color=(0, 215, 255),
     thickness=1,
     padding=2,
-    border_thickness=1
+    border_thickness=1,
 ):
     x, y = pos
     (w, h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
     h += baseline
-    cv2.rectangle(img, (x - padding, y - h - padding),
-                  (x + w + padding, y + padding), bg_color, -1)
-    cv2.rectangle(img, (x - padding, y - h - padding),
-                  (x + w + padding, y + padding), border_color, border_thickness)
+    cv2.rectangle(img, (x - padding, y - h - padding), (x + w + padding, y + padding), bg_color, -1)
+    cv2.rectangle(img, (x - padding, y - h - padding), (x + w + padding, y + padding), border_color, border_thickness)
     cv2.putText(img, text, (x, y), font, font_scale, text_color, thickness)
+
 
 def draw_mask_overlay(frame, mask_bin, color, alpha=0.35):
     """Blend a binary mask onto the frame with a given color and transparency."""
     colored = np.zeros_like(frame, dtype=np.uint8)
     colored[mask_bin > 0] = color
     cv2.addWeighted(colored, alpha, frame, 1 - alpha, 0, frame)
-    contours, _ = cv2.findContours(
-        mask_bin.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-    )
+    contours, _ = cv2.findContours(mask_bin.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
     cv2.drawContours(frame, contours, -1, color, 1)
 
+
 def ocr_label(crop):
-    """
-    Try OCR at 4 rotations. Return (full_text, normalized, un_code, un_desc, matched_key).
-    Only fires for 'label' class crops.
+    """Try OCR at 4 rotations. Return (full_text, normalized, un_code, un_desc, matched_key). Only fires for 'label'
+    class crops.
     """
     for angle in [0, 90, 180, 270]:
         img = crop.copy()
@@ -174,18 +174,10 @@ def ocr_label(crop):
 
     return None, None, None, None, None
 
+
 # ==================================================
 @smart_inference_mode()
-def run(
-    weights,
-    source,
-    imgsz=640,
-    conf_thres=0.25,
-    iou_thres=0.45,
-    device="",
-    project="runs/ocr",
-    name="exp"
-):
+def run(weights, source, imgsz=640, conf_thres=0.25, iou_thres=0.45, device="", project="runs/ocr", name="exp"):
     # track_id → OCR result dict (only populated for 'label' class)
     track_ocr_text = {}
 
@@ -199,8 +191,11 @@ def run(
     imgsz = check_img_size(imgsz, s=stride)
     model.warmup(imgsz=(1, 3, imgsz, imgsz))
 
-    dataset = LoadStreams(source, img_size=imgsz, stride=stride) \
-        if source.isnumeric() else LoadImages(source, img_size=imgsz, stride=stride)
+    dataset = (
+        LoadStreams(source, img_size=imgsz, stride=stride)
+        if source.isnumeric()
+        else LoadImages(source, img_size=imgsz, stride=stride)
+    )
 
     tracker = Sort(max_age=30, min_hits=2, iou_threshold=0.2)
 
@@ -208,7 +203,7 @@ def run(
         if STOP_REQUESTED:
             break
 
-        path, im, im0s, vid_cap, s = data
+        _path, im, im0s, _vid_cap, _s = data
         frame = im0s[0].copy() if isinstance(im0s, list) else im0s.copy()
         frame_h, frame_w = frame.shape[:2]
 
@@ -226,10 +221,7 @@ def run(
             pred_out = pred_raw
             proto = None
 
-        pred = non_max_suppression(
-            pred_out, conf_thres, iou_thres,
-            nm=32 if proto is not None else 0
-        )
+        pred = non_max_suppression(pred_out, conf_thres, iou_thres, nm=32 if proto is not None else 0)
 
         detections = []  # [x1, y1, x2, y2, conf, cls_idx, mask_or_None]
 
@@ -242,37 +234,25 @@ def run(
                 mask_coeffs = det[:, 6:]
                 boxes_scaled = scale_boxes(im_tensor.shape[2:], det[:, :4].clone(), frame.shape)
 
-                masks_raw = process_mask(
-                    proto[0], mask_coeffs, det[:, :4],
-                    im_tensor.shape[2:], upsample=True
-                )
+                masks_raw = process_mask(proto[0], mask_coeffs, det[:, :4], im_tensor.shape[2:], upsample=True)
 
                 masks_binary = []
                 for m in masks_raw:
                     m_np = m.cpu().numpy()
-                    m_resized = cv2.resize(m_np, (frame_w, frame_h),
-                                           interpolation=cv2.INTER_LINEAR)
+                    m_resized = cv2.resize(m_np, (frame_w, frame_h), interpolation=cv2.INTER_LINEAR)
                     masks_binary.append((m_resized > 0.5).astype(np.uint8))
 
                 det[:, :4] = boxes_scaled.round()
             else:
-                det[:, :4] = scale_boxes(
-                    im_tensor.shape[2:], det[:, :4], frame.shape
-                ).round()
+                det[:, :4] = scale_boxes(im_tensor.shape[2:], det[:, :4], frame.shape).round()
 
             for i, (*xyxy, conf, cls) in enumerate(det[:, :6]):
                 x1, y1, x2, y2 = map(int, xyxy)
-                detections.append([
-                    x1, y1, x2, y2,
-                    conf.item(),
-                    int(cls),
-                    masks_binary[i] if masks_binary else None
-                ])
+                detections.append([x1, y1, x2, y2, conf.item(), int(cls), masks_binary[i] if masks_binary else None])
 
         # ===== SORT TRACKING =====
         tracks = tracker.update(
-            np.array([[d[0], d[1], d[2], d[3], d[4]] for d in detections])
-            if detections else np.empty((0, 5))
+            np.array([[d[0], d[1], d[2], d[3], d[4]] for d in detections]) if detections else np.empty((0, 5))
         )
 
         for x1, y1, x2, y2, track_id in tracks.astype(int):
@@ -305,8 +285,7 @@ def run(
             # ===== OVERLAP CLASS — extra red warning =====
             if cls_name == "overlap":
                 cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 0, 255), 3)
-                cv2.putText(frame, "! OVERLAP", (x1, y1 - 25),
-                            cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
+                cv2.putText(frame, "! OVERLAP", (x1, y1 - 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
 
             # ===== OCR — ONLY for 'label' class, ONLY once per track_id =====
             if cls_name in OCR_CLASSES and track_id not in track_ocr_text and best_det is not None:
@@ -319,10 +298,10 @@ def run(
                         mx2, my2 = int(xs.max()), int(ys.max())
                         crop = frame[my1:my2, mx1:mx2]
                     else:
-                        crop = frame[best_det[1]:best_det[3], best_det[0]:best_det[2]]
+                        crop = frame[best_det[1] : best_det[3], best_det[0] : best_det[2]]
                 else:
                     # Fallback: bbox crop
-                    crop = frame[best_det[1]:best_det[3], best_det[0]:best_det[2]]
+                    crop = frame[best_det[1] : best_det[3], best_det[0] : best_det[2]]
 
                 if crop.size:
                     full, norm, un_code, un_desc, matched_key = ocr_label(crop)
@@ -330,12 +309,12 @@ def run(
                     if un_code or matched_key:
                         display_text = un_code if un_code else EXPECTED_LABEL_TEXTS.get(matched_key, matched_key)
                         track_ocr_text[track_id] = {
-                            "full":        full,
-                            "norm":        norm,
-                            "un_code":     un_code,
-                            "un_desc":     un_desc,
+                            "full": full,
+                            "norm": norm,
+                            "un_code": un_code,
+                            "un_desc": un_desc,
                             "matched_key": matched_key,
-                            "display":     display_text
+                            "display": display_text,
                         }
                         # ── SAME COUNT LOGIC AS ORIGINAL ──
                         # Count key: UN code if found, else the matched normalized key
@@ -348,28 +327,20 @@ def run(
                 ocr = track_ocr_text[track_id]
                 label += f" | {ocr['display']}"
                 # Show UN description on a second line below the box
-                if ocr['un_desc']:
-                    cv2.putText(frame, ocr['un_desc'], (x1, y2 + 18),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
+                if ocr["un_desc"]:
+                    cv2.putText(frame, ocr["un_desc"], (x1, y2 + 18), cv2.FONT_HERSHEY_SIMPLEX, 0.45, color, 1)
 
-            cv2.putText(frame, label, (x1, y1 - 6),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+            cv2.putText(frame, label, (x1, y1 - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
         # ===== LEFT PANEL — OCR COUNTS (label class only) =====
         y_offset = 30
-        draw_text_with_gold_box(frame, "=== LABEL COUNTS ===", (15, y_offset),
-                                 text_color=(0, 215, 255))
+        draw_text_with_gold_box(frame, "=== LABEL COUNTS ===", (15, y_offset), text_color=(0, 215, 255))
         y_offset += 25
 
         for count_key, cnt in sorted(ocr_text_counts.items()):
             # Show friendly name if available, else raw key
             display_name = EXPECTED_LABEL_TEXTS.get(count_key, count_key)
-            draw_text_with_gold_box(
-                frame,
-                f"{display_name} : {cnt}",
-                (15, y_offset),
-                text_color=(0, 255, 255)
-            )
+            draw_text_with_gold_box(frame, f"{display_name} : {cnt}", (15, y_offset), text_color=(0, 255, 255))
             y_offset += 22
 
         cv2.imshow("YOLOv5-Seg | Label OCR", frame)
@@ -392,16 +363,18 @@ def run(
     print("=" * 50)
     print("✅ Finished processing video")
 
+
 # ================= CLI =================
 def parse_opt():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--weights",    required=True,          help="Path to yolov5-seg .pt file")
-    parser.add_argument("--source",     required=True,          help="Video file path or webcam index")
-    parser.add_argument("--imgsz",      type=int, default=640,  help="Inference image size")
+    parser.add_argument("--weights", required=True, help="Path to yolov5-seg .pt file")
+    parser.add_argument("--source", required=True, help="Video file path or webcam index")
+    parser.add_argument("--imgsz", type=int, default=640, help="Inference image size")
     parser.add_argument("--conf-thres", type=float, default=0.25)
-    parser.add_argument("--iou-thres",  type=float, default=0.45)
-    parser.add_argument("--device",     default="",             help="cuda device or cpu")
+    parser.add_argument("--iou-thres", type=float, default=0.45)
+    parser.add_argument("--device", default="", help="cuda device or cpu")
     return parser.parse_args()
+
 
 if __name__ == "__main__":
     opt = parse_opt()

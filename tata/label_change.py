@@ -18,25 +18,24 @@
 #             file.write('\n'.join(new_lines) + '\n')
 
 
-
 import os
 
 folder_path = r"C:\imagevision projects\tata\bottomcut_8oct\train"
 for filename in os.listdir(folder_path):
-    if filename.endswith('.txt'):
+    if filename.endswith(".txt"):
         file_path = os.path.join(folder_path, filename)
-        
-        with open(file_path, 'r') as file:
+
+        with open(file_path) as file:
             lines = file.readlines()
 
         new_lines = []
         for line in lines:
             parts = line.strip().split()
             if parts:  # Ensure the line isn't empty
-                parts[0] = '0'  # Change class label to 0
-            new_lines.append(' '.join(parts))
+                parts[0] = "0"  # Change class label to 0
+            new_lines.append(" ".join(parts))
 
-        with open(file_path, 'w') as file:
-            file.write('\n'.join(new_lines) + '\n')
+        with open(file_path, "w") as file:
+            file.write("\n".join(new_lines) + "\n")
 
 print("✅ All class labels updated to 0.")
