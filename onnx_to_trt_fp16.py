@@ -1,6 +1,7 @@
-import os
-import tensorrt as trt
 import sys
+
+import tensorrt as trt
+
 # ------------------------------------------------------------------
 # CONFIG
 # ------------------------------------------------------------------
@@ -16,6 +17,7 @@ WORKSPACE_GB = 2
 # LOGGER
 # ------------------------------------------------------------------
 TRT_LOGGER = trt.Logger(trt.Logger.INFO)
+
 
 def help():
     print("""
@@ -114,21 +116,21 @@ NOTES
 
 ========================================================
 """)
+
+
 sys.exit(0)
+
 
 def build_engine():
     print("[INFO] Loading TensorRT plugins...")
     trt.init_libnvinfer_plugins(TRT_LOGGER, "")
 
-    with trt.Builder(TRT_LOGGER) as builder, \
-         builder.create_network(1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)) as network, \
-         trt.OnnxParser(network, TRT_LOGGER) as parser:
-
+    with trt.Builder(TRT_LOGGER) as builder, builder.create_network(
+        1 << int(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+    ) as network, trt.OnnxParser(network, TRT_LOGGER) as parser:
         config = builder.create_builder_config()
         config.set_flag(trt.BuilderFlag.FP16)
-        config.set_memory_pool_limit(
-            trt.MemoryPoolType.WORKSPACE, WORKSPACE_GB << 30
-        )
+        config.set_memory_pool_limit(trt.MemoryPoolType.WORKSPACE, WORKSPACE_GB << 30)
 
         print("[INFO] Parsing ONNX...")
         with open(ONNX_PATH, "rb") as f:

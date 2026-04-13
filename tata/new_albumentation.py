@@ -1,11 +1,9 @@
-
- 
 # import os
 
 # os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"   # Fix OpenMP runtime error
- 
+
 # import cv2
-    
+
 # import albumentations as A
 
 # # =========================
@@ -20,7 +18,7 @@
 
 # AUG_IMAGE_DIR = r"C:\imagevision projects\tata\combine_i2_day4_base 1\combine_i2_day3_base\train\aug_images"
 # AUG_LABEL_DIR = r"C:\imagevision projects\tata\combine_i2_day4_base 1\combine_i2_day3_base\train\aug_labels"
- 
+
 # # Create output directories
 
 # os.makedirs(AUG_IMAGE_DIR, exist_ok=True)
@@ -60,7 +58,7 @@
 #     A.HorizontalFlip(p=0.5),
 
 #     A.VerticalFlip(p=0.5),
- 
+
 #     # fixed rotations 30° or 60°
 
 #     A.OneOf([
@@ -70,11 +68,11 @@
 #         A.Affine(rotate=60, scale=(1.0, 1.0), fit_output=True, cval=(0, 0, 0)),
 
 #     ], p=0.5),
- 
+
 #     # any random rotation (0–360°)
 
 #     A.Rotate(limit=360, border_mode=cv2.BORDER_CONSTANT, value=(0, 0, 0), p=0.5),
- 
+
 #     # zoom in/out
 
 #     A.OneOf([
@@ -84,7 +82,7 @@
 #         A.Affine(scale=(0.7, 0.9), fit_output=True, cval=(0, 0, 0)),  # zoom-out
 
 #     ], p=0.5),
- 
+
 #     # brightness/contrast
 
 #     A.RandomBrightnessContrast(p=0.4)
@@ -190,45 +188,12 @@
 
 # print(f"🎉 Augmentation completed. Classes file saved in {AUG_LABEL_DIR}/classes.txt")
 
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 import os
-import cv2
 import random
+
 import albumentations as A
+import cv2
 
 # =========================
 # Paths
@@ -244,7 +209,7 @@ os.makedirs(AUG_LABEL_DIR, exist_ok=True)
 
 # Copy existing classes.txt if available
 if os.path.exists(os.path.join(LABEL_DIR, "classes.txt")):
-    with open(os.path.join(LABEL_DIR, "classes.txt"), "r") as f:
+    with open(os.path.join(LABEL_DIR, "classes.txt")) as f:
         class_names = [line.strip() for line in f if line.strip()]
 else:
     class_names = ["defect"]
@@ -252,12 +217,13 @@ else:
 with open(os.path.join(AUG_LABEL_DIR, "classes.txt"), "w") as f:
     f.write("\n".join(class_names) + "\n")
 
+
 # =========================
 # Helper functions
 # =========================
 def load_yolo_labels(txt_file):
     bboxes, labels = [], []
-    with open(txt_file, "r") as f:
+    with open(txt_file) as f:
         for line in f:
             parts = line.strip().split()
             if len(parts) == 5:
@@ -266,46 +232,28 @@ def load_yolo_labels(txt_file):
                 labels.append(int(cls))
     return bboxes, labels
 
+
 def save_yolo_labels(txt_file, bboxes, labels):
     with open(txt_file, "w") as f:
-        for (bbox, cls) in zip(bboxes, labels):
+        for bbox, cls in zip(bboxes, labels):
             x, y, w, h = bbox
             f.write(f"{int(cls)} {x:.6f} {y:.6f} {w:.6f} {h:.6f}\n")
+
 
 # =========================
 # Define individual transforms
 # =========================
 all_transforms = [
     A.HorizontalFlip(p=1.0),  # Optional horizontal flip
-
-    #A.VerticalFlip(p=1.0),      # Flips the image vertically
-
-    A.Affine(
-        rotate=20, 
-        scale=(1.0, 1.0), 
-        fit_output=True, 
-        cval=(0, 0, 0)
-    ),                           # Rotation with constant background
-
-    #A.Affine(rotate=60, scale=(1.0, 1.0), fit_output=True, cval=(0, 0, 0)), # Optional
-
-    #A.Rotate(limit=90, border_mode=cv2.BORDER_CONSTANT, value=(0, 0, 0), p=1.0),  # Alternative rotate
-
-    A.Affine(
-        scale=(1.2, 1.5), 
-        fit_output=True, 
-        cval=(0, 0, 0)
-    ),                           # Zoom-in (enlarge image)
-
-    A.Affine(
-        scale=(0.7, 0.9), 
-        fit_output=True, 
-        cval=(0, 0, 0)
-    ),                           # Zoom-out (shrink image)
-
-    A.RandomBrightnessContrast(p=1.0)  # Adjust brightness & contrast
+    # A.VerticalFlip(p=1.0),      # Flips the image vertically
+    A.Affine(rotate=20, scale=(1.0, 1.0), fit_output=True, cval=(0, 0, 0)),  # Rotation with constant background
+    # A.Affine(rotate=60, scale=(1.0, 1.0), fit_output=True, cval=(0, 0, 0)), # Optional
+    # A.Rotate(limit=90, border_mode=cv2.BORDER_CONSTANT, value=(0, 0, 0), p=1.0),  # Alternative rotate
+    A.Affine(scale=(1.2, 1.5), fit_output=True, cval=(0, 0, 0)),  # Zoom-in (enlarge image)
+    A.Affine(scale=(0.7, 0.9), fit_output=True, cval=(0, 0, 0)),  # Zoom-out (shrink image)
+    A.RandomBrightnessContrast(p=1.0),  # Adjust brightness & contrast
 ]
-    
+
 # =========================
 # Main Loop (2 different random augs per image)
 # =========================
@@ -329,8 +277,7 @@ for filename in os.listdir(IMAGE_DIR):
 
         for i, t in enumerate(chosen_transforms, start=1):
             transform = A.Compose(
-                [t],
-                bbox_params=A.BboxParams(format="yolo", label_fields=["class_labels"], min_visibility=0.2)
+                [t], bbox_params=A.BboxParams(format="yolo", label_fields=["class_labels"], min_visibility=0.2)
             )
 
             augmented = transform(image=image, bboxes=bboxes, class_labels=class_labels)
@@ -349,25 +296,6 @@ for filename in os.listdir(IMAGE_DIR):
         print(f"✅ Augmented {filename} -> {N_AUGS} different versions saved")
 
 print(f"🎉 Augmentation completed. Classes file saved in {AUG_LABEL_DIR}/classes.txt")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # import os
