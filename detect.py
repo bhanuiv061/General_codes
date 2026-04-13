@@ -1,15 +1,15 @@
-
 import argparse
 import csv
 import os
+import pathlib
 import platform
 import sys
 from pathlib import Path
 
 import torch
-import pathlib
+
 temp = pathlib.PosixPath
-pathlib.PosixPath = pathlib.WindowsPath 
+pathlib.PosixPath = pathlib.WindowsPath
 FILE = Path(__file__).resolve()
 ROOT = FILE.parents[0]  # YOLOv5 root directory
 if str(ROOT) not in sys.path:
@@ -71,9 +71,6 @@ def run(
     dnn=False,  # use OpenCV DNN for ONNX inference
     vid_stride=1,  # video frame-rate stride
 ):
-   
-
-
 
     source = str(source)
     save_img = not nosave and not source.endswith(".txt")  # save inference images
@@ -249,8 +246,7 @@ def run(
 
 
 def parse_opt():
-    """
-    Parse command-line arguments for YOLOv5 detection, allowing custom inference options and model configurations.
+    """Parse command-line arguments for YOLOv5 detection, allowing custom inference options and model configurations.
 
     Args:
         --weights (str | list[str], optional): Model path or Triton URL. Defaults to ROOT / 'yolov5s.pt'.
@@ -267,7 +263,8 @@ def parse_opt():
         --save-conf (bool, optional): Flag to save confidences in labels saved via --save-txt. Defaults to False.
         --save-crop (bool, optional): Flag to save cropped prediction boxes. Defaults to False.
         --nosave (bool, optional): Flag to prevent saving images/videos. Defaults to False.
-        --classes (list[int], optional): List of classes to filter results by, e.g., '--classes 0 2 3'. Defaults to None.
+        --classes (list[int], optional): List of classes to filter results by, e.g., '--classes 0 2 3'. Defaults to
+            None.
         --agnostic-nms (bool, optional): Flag for class-agnostic NMS. Defaults to False.
         --augment (bool, optional): Flag for augmented inference. Defaults to False.
         --visualize (bool, optional): Flag for visualizing features. Defaults to False.
@@ -286,7 +283,7 @@ def parse_opt():
     Returns:
         argparse.Namespace: Parsed command-line arguments as an argparse.Namespace object.
 
-    Example:
+    Examples:
         ```python
         from ultralytics import YOLOv5
         args = YOLOv5.parse_opt()
@@ -334,7 +331,7 @@ def parse_opt():
 
 
 def main(opt):
- 
+
     check_requirements(ROOT / "requirements.txt", exclude=("tensorboard", "thop"))
     run(**vars(opt))
 

@@ -1,15 +1,15 @@
 import argparse
-import sys
-import time
-import traceback
-from pathlib import Path
-import cv2
-import torch
-import numpy as np
 import os
 import pathlib
-from tqdm import tqdm
 import signal
+import sys
+import time
+from pathlib import Path
+
+import cv2
+import numpy as np
+import torch
+from tqdm import tqdm
 
 # ================= WINDOWS PATH FIX =================
 temp = pathlib.PosixPath
@@ -23,12 +23,13 @@ if str(ROOT) not in sys.path:
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))
 
 # ================= YOLOv5 SEG =================
+from sort.sort import Sort
+
 from models.common import DetectMultiBackend
 from utils.dataloaders import LoadImages, LoadStreams
 from utils.general import check_img_size, non_max_suppression, scale_boxes
 from utils.segment.general import process_mask
 from utils.torch_utils import select_device, smart_inference_mode
-from sort.sort import Sort
 
 # ================= CONFIG =================
 LINE_X = 800
@@ -45,6 +46,7 @@ def request_stop(sig=None, frame=None):
 
 signal.signal(signal.SIGINT, request_stop)
 signal.signal(signal.SIGTERM, request_stop)
+
 
 # ================= UTILITIES =================
 def get_class_color(cls):
@@ -78,25 +80,14 @@ def draw_text_with_gold_box(img, text, pos, color):
 
     (w, h), _ = cv2.getTextSize(text, font, scale, thickness)
     x, y = pos
-    cv2.rectangle(img, (x - padding, y - h - padding),
-                  (x + w + padding, y + padding), (0, 0, 0), -1)
-    cv2.rectangle(img, (x - padding, y - h - padding),
-                  (x + w + padding, y + padding), (0, 215, 255), 2)
+    cv2.rectangle(img, (x - padding, y - h - padding), (x + w + padding, y + padding), (0, 0, 0), -1)
+    cv2.rectangle(img, (x - padding, y - h - padding), (x + w + padding, y + padding), (0, 215, 255), 2)
     cv2.putText(img, text, (x, y), font, scale, color, thickness, cv2.LINE_AA)
 
 
 # ==================================================
 @smart_inference_mode()
-def run(
-    weights,
-    source,
-    imgsz=640,
-    conf_thres=0.25,
-    iou_thres=0.45,
-    device="",
-    project="runs/seg-count",
-    name="exp"
-):
+def run(weights, source, imgsz=640, conf_thres=0.25, iou_thres=0.45, device="", project="runs/seg-count", name="exp"):
     raw_writer = None
     ann_writer = None
     frame_idx = 0
@@ -116,8 +107,11 @@ def run(
         imgsz = check_img_size(imgsz, s=stride)
         model.warmup(imgsz=(1, 3, imgsz, imgsz))
 
-        dataset = LoadStreams(source, img_size=imgsz, stride=stride) \
-            if is_webcam else LoadImages(source, img_size=imgsz, stride=stride)
+        dataset = (
+            LoadStreams(source, img_size=imgsz, stride=stride)
+            if is_webcam
+            else LoadImages(source, img_size=imgsz, stride=stride)
+        )
 
         tracker = Sort(max_age=30, min_hits=2, iou_threshold=0.2)
 
@@ -131,7 +125,7 @@ def run(
             if STOP_REQUESTED:
                 break
 
-            path, im, im0s, vid_cap, _ = data
+            _path, im, im0s, vid_cap, _ = data
             frame_idx += 1
 
             raw = im0s[0].copy() if isinstance(im0s, list) else im0s.copy()
@@ -155,9 +149,7 @@ def run(
                     x1, y1, x2, y2 = map(int, xyxy)
                     detections.append([x1, y1, x2, y2, conf.item(), int(cls), masks[i]])
 
-            tracks = tracker.update(
-                np.array([d[:5] for d in detections]) if detections else np.empty((0, 5))
-            )
+            tracks = tracker.update(np.array([d[:5] for d in detections]) if detections else np.empty((0, 5)))
 
             now = time.time()
 
@@ -185,7 +177,7 @@ def run(
                 track_class.setdefault(tid, cls_name)
 
                 # Mask centroid
-                ys, xs = np.where(mask)
+                _ys, xs = np.where(mask)
                 if len(xs) == 0:
                     continue
                 cx = int(xs.mean())
@@ -210,8 +202,7 @@ def run(
                 color = get_class_color(cls_name)
                 frame[mask] = frame[mask] * 0.5 + np.array(color) * 0.5
 
-                cv2.putText(frame, f"{cls_name} ID:{tid}",
-                            (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
+                cv2.putText(frame, f"{cls_name} ID:{tid}", (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
             # Draw lines
             cv2.line(frame, (LINE_X, 0), (LINE_X, frame.shape[0]), (0, 255, 255), 2)
@@ -221,22 +212,15 @@ def run(
             y = 40
             for cls in count_in:
                 draw_text_with_gold_box(
-                    frame,
-                    f"{cls} IN:{count_in[cls]} OUT:{count_out[cls]}",
-                    (15, y),
-                    get_class_color(cls)
+                    frame, f"{cls} IN:{count_in[cls]} OUT:{count_out[cls]}", (15, y), get_class_color(cls)
                 )
                 y += 34
 
             if raw_writer is None:
                 h, w = frame.shape[:2]
                 fps = vid_cap.get(cv2.CAP_PROP_FPS) if vid_cap else 25
-                raw_writer = cv2.VideoWriter(str(raw_video),
-                                             cv2.VideoWriter_fourcc(*"mp4v"),
-                                             fps, (w, h))
-                ann_writer = cv2.VideoWriter(str(ann_video),
-                                             cv2.VideoWriter_fourcc(*"mp4v"),
-                                             fps, (w, h))
+                raw_writer = cv2.VideoWriter(str(raw_video), cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
+                ann_writer = cv2.VideoWriter(str(ann_video), cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
             raw_writer.write(raw)
             ann_writer.write(frame)
