@@ -20,26 +20,26 @@
 # for result in results:
 #     # Get the original image (numpy array)
 #     img = result.orig_img  # This is the original image in numpy format
-    
+
 #     # Extract the bounding boxes and labels from the results
 #     boxes = result.boxes  # Get the boxes (bounding boxes)
-    
+
 #     # Draw bounding boxes and labels on the image using OpenCV
 #     for box in boxes:
 #         # Get the box coordinates and label (accessing tensor values correctly)
 #         x1, y1, x2, y2 = box.xyxy[0].tolist()  # Convert tensor to list and then unpack
-        
+
 #         # Convert to integers
 #         x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])  # Convert coordinates to integers
-        
+
 #         label = int(box.cls.item())  # Convert tensor to integer for the class label
 #         confidence = float(box.conf.item())  # Convert tensor to float for confidence score
-        
+
 #         # Draw the bounding box on the image (rectangle)
 #         color = (0, 255, 0)  # Green color for the box
 #         thickness = 2  # Thickness of the bounding box
 #         img = cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
-        
+
 #         # Optionally, draw the label and confidence score
 #         text = f"Class: {label}, Confidence: {confidence:.2f}"  # Format text with label and confidence
 #         img = cv2.putText(img, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
@@ -57,28 +57,8 @@
 # # cv2.destroyAllWindows()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import os
+
 import cv2
 from ultralytics import YOLO
 
@@ -100,26 +80,26 @@ results = model.predict(input_folder, conf=0.25)
 for result in results:
     # Get the original image (numpy array)
     img = result.orig_img  # This is the original image in numpy format
-    
+
     # Extract the bounding boxes and labels from the results
     boxes = result.boxes  # Get the boxes (bounding boxes)
-    
+
     # Draw bounding boxes and labels on the image using OpenCV
     for box in boxes:
         # Get the box coordinates and label (accessing tensor values correctly)
         x1, y1, x2, y2 = box.xyxy[0].tolist()  # Convert tensor to list and then unpack
-        
+
         # Convert to integers
         x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])  # Convert coordinates to integers
-        
+
         label = int(box.cls.item())  # Convert tensor to integer for the class label
         confidence = float(box.conf.item())  # Convert tensor to float for confidence score
-        
+
         # Draw the bounding box on the image (rectangle)
         color = (0, 255, 0)  # Green color for the box
         thickness = 2  # Thickness of the bounding box
         img = cv2.rectangle(img, (x1, y1), (x2, y2), color, thickness)
-        
+
         # Optionally, draw the label and confidence score
         text = f"Class: {label}, Confidence: {confidence:.2f}"  # Format text with label and confidence
         img = cv2.putText(img, text, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
@@ -128,7 +108,7 @@ for result in results:
     input_image_path = result.path  # Path to the input image (from result)
     input_image_name = os.path.basename(input_image_path)  # Extract file name from the path
     output_image_path = os.path.join(output_folder, input_image_name)  # Use the same file name for output
-    
+
     # Save the processed image with bounding boxes using cv2.imwrite
     cv2.imwrite(output_image_path, img)  # Save the image using OpenCV
 

@@ -1,14 +1,13 @@
-
-
 import argparse
 import csv
 import os
+import pathlib
 import platform
 import sys
 from pathlib import Path
 
 import torch
-import pathlib
+
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
 FILE = Path(__file__).resolve()
@@ -17,7 +16,7 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 
-from ultralytics.utils.plotting import Annotator, colors, save_one_box
+from ultralytics.utils.plotting import Annotator, save_one_box
 
 from models.common import DetectMultiBackend
 from utils.dataloaders import IMG_FORMATS, VID_FORMATS, LoadImages, LoadScreenshots, LoadStreams
@@ -39,10 +38,9 @@ from utils.general import (
 )
 from utils.torch_utils import select_device, smart_inference_mode
 
+
 def box_iou_xyxy(box1, box2):
-    """
-    box1, box2: [x1, y1, x2, y2]
-    returns IoU
+    """box1, box2: [x1, y1, x2, y2] returns IoU.
     """
     xA = max(box1[0], box2[0])
     yA = max(box1[1], box2[1])
@@ -61,6 +59,8 @@ def box_iou_xyxy(box1, box2):
         return 0.0
 
     return inter_area / union_area
+
+
 @smart_inference_mode()
 def run(
     weights=ROOT / "yolov5s.pt",  # model path or triton URL
@@ -93,8 +93,6 @@ def run(
     dnn=False,  # use OpenCV DNN for ONNX inference
     vid_stride=1,  # video frame-rate stride
 ):
-
-
 
     source = str(source)
     save_img = not nosave and not source.endswith(".txt")  # save inference images
@@ -220,7 +218,7 @@ def run(
                         0.9,
                         (0, 0, 255),  # red
                         2,
-                        cv2.LINE_AA
+                        cv2.LINE_AA,
                     )
 
                 # ================= CLASS COUNTS =================
@@ -242,7 +240,9 @@ def run(
 
                     if save_txt:  # Write to file
                         if save_format == 0:
-                            coords = (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()  # normalized xywh
+                            coords = (
+                                (xyxy2xywh(torch.tensor(xyxy).view(1, 4)) / gn).view(-1).tolist()
+                            )  # normalized xywh
                         else:
                             coords = (torch.tensor(xyxy).view(1, 4) / gn).view(-1).tolist()  # xyxy
                         line = (cls, *coords, conf) if save_conf else (cls, *coords)
@@ -298,8 +298,7 @@ def run(
 
 
 def parse_opt():
-    """
-    Parse command-line arguments for YOLOv5 detection, allowing custom inference options and model configurations.
+    """Parse command-line arguments for YOLOv5 detection, allowing custom inference options and model configurations.
 
     Args:
         --weights (str | list[str], optional): Model path or Triton URL. Defaults to ROOT / 'yolov5s.pt'.
@@ -316,7 +315,8 @@ def parse_opt():
         --save-conf (bool, optional): Flag to save confidences in labels saved via --save-txt. Defaults to False.
         --save-crop (bool, optional): Flag to save cropped prediction boxes. Defaults to False.
         --nosave (bool, optional): Flag to prevent saving images/videos. Defaults to False.
-        --classes (list[int], optional): List of classes to filter results by, e.g., '--classes 0 2 3'. Defaults to None.
+        --classes (list[int], optional): List of classes to filter results by, e.g., '--classes 0 2 3'. Defaults to
+            None.
         --agnostic-nms (bool, optional): Flag for class-agnostic NMS. Defaults to False.
         --augment (bool, optional): Flag for augmented inference. Defaults to False.
         --visualize (bool, optional): Flag for visualizing features. Defaults to False.
@@ -335,7 +335,7 @@ def parse_opt():
     Returns:
         argparse.Namespace: Parsed command-line arguments as an argparse.Namespace object.
 
-    Example:
+    Examples:
         ```python
         from ultralytics import YOLOv5
         args = YOLOv5.parse_opt()
@@ -391,87 +391,6 @@ def main(opt):
 if __name__ == "__main__":
     opt = parse_opt()
     main(opt)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # import argparse
@@ -546,9 +465,6 @@ if __name__ == "__main__":
 #     dnn=False,  # use OpenCV DNN for ONNX inference
 #     vid_stride=1,  # video frame-rate stride
 # ):
-
-
-
 
 
 #     source = str(source)

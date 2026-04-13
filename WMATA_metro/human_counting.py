@@ -1,5 +1,3 @@
-
-
 # import argparse
 # import os
 # import sys
@@ -246,54 +244,7 @@
 #     run(**vars(opt))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 #################  working #####################################################
-
 
 
 # import argparse
@@ -529,32 +480,7 @@
 #     run(**vars(opt))
 
 
-
-
 ############### python human_counting.py --img 640 --weights yolov5s.pt --project "D:\bhanu\human_detection" --name human_ --conf 0.50 --source "C:\Users\admin\Downloads\human_video_.mp4" --mode roi
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # import argparse
@@ -802,41 +728,22 @@
 #     run(**vars(opt))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ################ sort + yolov5s + roi counting (FULL FRAME VISIBLE) + line counting (SINGLE LINE) + OUTPUT VIDEO WITH COUNTS + ARGPARSE
 
 
-
-
-
-
 import argparse
-import os
-import sys
-from pathlib import Path
-import pathlib
-import cv2
-import torch
-import numpy as np
-from sort.sort import Sort
-import time
-from tqdm import tqdm
 import math
+import os
+import pathlib
+import sys
+import time
+from pathlib import Path
+
+import cv2
+import numpy as np
+import torch
+from sort.sort import Sort
+from tqdm import tqdm
 
 # ================= WINDOWS PATH FIX =================
 temp = pathlib.PosixPath
@@ -848,10 +755,10 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))
 
-from utils.dataloaders import LoadImages, LoadStreams
-from ultralytics.utils.plotting import Annotator
+
 from models.common import DetectMultiBackend
-from utils.general import check_img_size, non_max_suppression, scale_boxes, increment_path
+from utils.dataloaders import LoadImages, LoadStreams
+from utils.general import check_img_size, increment_path, non_max_suppression, scale_boxes
 from utils.torch_utils import select_device, smart_inference_mode
 
 
@@ -925,8 +832,11 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
     stride, names = model.stride, model.names
     imgsz = check_img_size(imgsz, s=stride)
 
-    dataset = LoadStreams(source, img_size=imgsz, stride=stride) \
-        if source.isnumeric() else LoadImages(source, img_size=imgsz, stride=stride)
+    dataset = (
+        LoadStreams(source, img_size=imgsz, stride=stride)
+        if source.isnumeric()
+        else LoadImages(source, img_size=imgsz, stride=stride)
+    )
 
     tracker = Sort(max_age=30, min_hits=2, iou_threshold=0.2)
 
@@ -942,10 +852,13 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
     # ================= ROI =================
     roi_coords = None
     if mode == "roi":
-        temp_ds = LoadStreams(source, img_size=imgsz, stride=stride) \
-            if source.isnumeric() else LoadImages(source, img_size=imgsz, stride=stride)
+        temp_ds = (
+            LoadStreams(source, img_size=imgsz, stride=stride)
+            if source.isnumeric()
+            else LoadImages(source, img_size=imgsz, stride=stride)
+        )
 
-        path, im, im0s, vid_cap, s = next(iter(temp_ds))
+        path, im, im0s, _vid_cap, _s = next(iter(temp_ds))
         frame = im0s[0].copy() if isinstance(im0s, list) else im0s.copy()
         roi_coords = select_roi_with_mouse(frame)
         if roi_coords is None:
@@ -960,14 +873,14 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
     writer = None
 
     # ================= TRACK MEMORY =================
-    track_memory = {}   # tid -> (cx, cy, last_seen_frame)
+    track_memory = {}  # tid -> (cx, cy, last_seen_frame)
     frame_idx = 0
     MAX_MEMORY_FRAMES = 60
 
     # ================= LOOP =================
     for data in tqdm(dataset, desc="Processing"):
         frame_idx += 1
-        path, im, im0s, cap, _ = data
+        _path, im, im0s, cap, _ = data
         im0 = im0s[0].copy() if isinstance(im0s, list) else im0s.copy()
 
         im = torch.from_numpy(im).to(device).float() / 255.0
@@ -980,11 +893,7 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
         if writer is None:
             h, w = im0.shape[:2]
             fps = cap.get(cv2.CAP_PROP_FPS) if cap else 30
-            writer = cv2.VideoWriter(
-                str(out_path),
-                cv2.VideoWriter_fourcc(*"mp4v"),
-                fps, (w, h)
-            )
+            writer = cv2.VideoWriter(str(out_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
         detections = []
 
@@ -1022,19 +931,15 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
                     counted_ids.add(tid)
 
             cv2.rectangle(im0, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(im0, f"ID {tid}", (x1, y1 - 5),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+            cv2.putText(im0, f"ID {tid}", (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 
         # ================= CLEAN OLD IDS =================
-        expired = [
-            tid for tid, (_, _, last) in track_memory.items()
-            if frame_idx - last > MAX_MEMORY_FRAMES
-        ]
+        expired = [tid for tid, (_, _, last) in track_memory.items() if frame_idx - last > MAX_MEMORY_FRAMES]
         for tid in expired:
             del track_memory[tid]
 
         if mode == "roi":
-            cv2.rectangle(im0, (roi_x1, roi_y1), (roi_x2, roi_y2),(180, 180, 180), 1)
+            cv2.rectangle(im0, (roi_x1, roi_y1), (roi_x2, roi_y2), (180, 180, 180), 1)
 
         if mode == "line":
             cv2.line(im0, (0, line_y), (im0.shape[1], line_y), (0, 255, 255), 1)
@@ -1051,17 +956,15 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
         padding = 15
 
         # Get text size
-        (text_w, text_h), baseline = cv2.getTextSize(
-            text, font, font_scale, thickness
-        )
+        (text_w, text_h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
 
         # ✅ 1. Draw background FIRST
         cv2.rectangle(
             im0,
             (x - padding, y - text_h - padding),
             (x + text_w + padding, y + baseline + padding),
-            (0, 0, 0),   # black background
-            -1
+            (0, 0, 0),  # black background
+            -1,
         )
 
         # ✅ 2. Draw outline (white)
@@ -1071,9 +974,9 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
             (x, y),
             font,
             font_scale,
-            (255, 255, 255),   # white outline
+            (255, 255, 255),  # white outline
             outline_thickness,
-            cv2.LINE_AA
+            cv2.LINE_AA,
         )
 
         # ✅ 3. Draw main text (BLACK)
@@ -1083,9 +986,9 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
             (x, y),
             font,
             font_scale,
-            (255, 255, 255),         # BLACK text
+            (255, 255, 255),  # BLACK text
             thickness,
-            cv2.LINE_AA
+            cv2.LINE_AA,
         )
 
         writer.write(im0)
@@ -1110,28 +1013,3 @@ def parse_opt():
 if __name__ == "__main__":
     opt = parse_opt()
     run(**vars(opt))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

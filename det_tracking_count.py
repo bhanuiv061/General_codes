@@ -1,25 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # import argparse
 # import csv
 # import os
@@ -344,29 +322,6 @@
 # if __name__ == "__main__":
 #     opt = parse_opt()
 #     main(opt)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # import argparse
@@ -709,30 +664,6 @@
 #     run(**vars(opt))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # import argparse
 # import os
 # import sys
@@ -965,7 +896,6 @@
 #         print("\n✅ Video saved:", video_path)
 
 
-
 # def about():
 #     """
 # YOLOv5 + SORT Object Tracking with IN/OUT Line Crossing Counter
@@ -986,7 +916,7 @@
 # The system counts objects separately based on the direction they cross
 # a predefined horizontal line in the video frame.
 
-# IN  direction  = Object moves from ABOVE the line to BELOW  
+# IN  direction  = Object moves from ABOVE the line to BELOW
 # OUT direction = Object moves from BELOW the line to ABOVE
 
 # This is useful for:
@@ -998,15 +928,15 @@
 # ----------------------------------------------------------------------
 # 🧠 CORE FEATURES
 # ----------------------------------------------------------------------
-# ✔ Real-time YOLOv5 object detection  
-# ✔ SORT tracking with stable object IDs  
-# ✔ Memory buffer to avoid class flickering  
-# ✔ Prevents double counting using ID history  
-# ✔ Direction-based IN / OUT counting  
-# ✔ Optional single-class filtering  
-# ✔ Watermarked output video  
-# ✔ Live FPS and stats in terminal  
-# ✔ Auto-removal of stale IDs after buffer time  
+# ✔ Real-time YOLOv5 object detection
+# ✔ SORT tracking with stable object IDs
+# ✔ Memory buffer to avoid class flickering
+# ✔ Prevents double counting using ID history
+# ✔ Direction-based IN / OUT counting
+# ✔ Optional single-class filtering
+# ✔ Watermarked output video
+# ✔ Live FPS and stats in terminal
+# ✔ Auto-removal of stale IDs after buffer time
 
 # ----------------------------------------------------------------------
 # 📊 COUNTING LOGIC
@@ -1025,8 +955,8 @@
 
 # Movement Direction Detection:
 # --------------------------------
-# ABOVE  → BELOW  = IN count increases  
-# BELOW  → ABOVE  = OUT count increases  
+# ABOVE  → BELOW  = IN count increases
+# BELOW  → ABOVE  = OUT count increases
 
 # Objects moving along the line without crossing are ignored.
 
@@ -1035,10 +965,10 @@
 # ----------------------------------------------------------------------
 # The system prevents ID flickering and class switching using:
 
-# track_class_memory → Remembers last known class per ID  
-# track_last_seen    → Stores last frame object was detected  
-# track_side_memory  → Stores last known side of the line  
-# counted_ids        → Prevents duplicate counting  
+# track_class_memory → Remembers last known class per ID
+# track_last_seen    → Stores last frame object was detected
+# track_side_memory  → Stores last known side of the line
+# counted_ids        → Prevents duplicate counting
 
 # BUFFER_FRAMES = 300 (~10 seconds)
 
@@ -1054,7 +984,7 @@
 #     --filter-class Car
 
 # This means:
-# ✔ Only "Car" objects are tracked and counted  
+# ✔ Only "Car" objects are tracked and counted
 # ✖ All other detected classes are ignored
 
 # ----------------------------------------------------------------------
@@ -1098,8 +1028,8 @@
 # ----------------------------------------------------------------------
 # Instead of simple totals, you now get directional flow:
 
-# Car IN : 12  
-# Car OUT: 9  
+# Car IN : 12
+# Car OUT: 9
 
 # Perfect for traffic flow, entry/exit analytics, and industrial automation.
 #     """
@@ -1133,30 +1063,17 @@
 #     run(**vars(opt))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 import argparse
 import os
-import sys
-from pathlib import Path
 import pathlib
-import cv2
-import torch
-import numpy as np
-from sort.sort import Sort
+import sys
 import time
+from pathlib import Path
+
+import cv2
+import numpy as np
+import torch
+from sort.sort import Sort
 
 # Fix Windows path issue
 temp = pathlib.PosixPath
@@ -1168,10 +1085,11 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))
 
-from utils.dataloaders import LoadImages, LoadStreams
 from ultralytics.utils.plotting import Annotator
+
 from models.common import DetectMultiBackend
-from utils.general import check_img_size, non_max_suppression, scale_boxes, increment_path
+from utils.dataloaders import LoadImages, LoadStreams
+from utils.general import check_img_size, increment_path, non_max_suppression, scale_boxes
 from utils.torch_utils import select_device, smart_inference_mode
 
 
@@ -1195,11 +1113,12 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name):
         font_scale = min(w, h) / 900
         thickness = int(font_scale * 2)
         layer = np.zeros_like(frame, dtype=np.uint8)
-        cv2.putText(layer, text, (w//4, h//2),
-                    cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255,255,255), thickness, cv2.LINE_AA)
-        M = cv2.getRotationMatrix2D((w//2, h//2), 30, 1.0)
+        cv2.putText(
+            layer, text, (w // 4, h // 2), cv2.FONT_HERSHEY_SIMPLEX, font_scale, (255, 255, 255), thickness, cv2.LINE_AA
+        )
+        M = cv2.getRotationMatrix2D((w // 2, h // 2), 30, 1.0)
         rotated = cv2.warpAffine(layer, M, (w, h))
-        return cv2.addWeighted(rotated, opacity, overlay, 1-opacity, 0)
+        return cv2.addWeighted(rotated, opacity, overlay, 1 - opacity, 0)
 
     def add_logo_top_left(frame, logo_path="logo_white 1.png", width=120):
         if not os.path.exists(logo_path):
@@ -1214,12 +1133,12 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name):
         if logo.shape[2] == 4:
             alpha = logo[:, :, 3] / 255.0
             for c in range(3):
-                frame[y_offset:y_offset+new_h, x_offset:x_offset+width, c] = (
-                    alpha * logo[:, :, c] +
-                    (1 - alpha) * frame[y_offset:y_offset+new_h, x_offset:x_offset+width, c]
+                frame[y_offset : y_offset + new_h, x_offset : x_offset + width, c] = (
+                    alpha * logo[:, :, c]
+                    + (1 - alpha) * frame[y_offset : y_offset + new_h, x_offset : x_offset + width, c]
                 )
         else:
-            frame[y_offset:y_offset+new_h, x_offset:x_offset+width] = logo[:, :, :3]
+            frame[y_offset : y_offset + new_h, x_offset : x_offset + width] = logo[:, :, :3]
         return frame
 
     # ---------------- MODEL ----------------
@@ -1228,14 +1147,17 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name):
     stride, names = model.stride, model.names
     imgsz = check_img_size(imgsz, s=stride)
 
-    dataset = LoadStreams(source, img_size=imgsz, stride=stride) if source.isnumeric() else LoadImages(source, img_size=imgsz, stride=stride)
+    dataset = (
+        LoadStreams(source, img_size=imgsz, stride=stride)
+        if source.isnumeric()
+        else LoadImages(source, img_size=imgsz, stride=stride)
+    )
     tracker = Sort(max_age=30, min_hits=2, iou_threshold=0.2)
 
     FONT = cv2.FONT_HERSHEY_SIMPLEX
     track_class_memory, track_last_seen, track_side_memory = {}, {}, {}
     counted_ids = set()
 
-    BUFFER_FRAMES = 300
     line_y = 200
     offset = 5
 
@@ -1248,13 +1170,13 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name):
     try:
         for frame_idx, data in enumerate(dataset):
             frame_time = time.time()
-            fps_live = 1 / (frame_time - start_time + 1e-6)
+            1 / (frame_time - start_time + 1e-6)
             start_time = frame_time
 
             if data is None:
                 continue
 
-            path, im, im0s, vid_cap, s = data
+            _path, im, im0s, vid_cap, _s = data
             if im is None or im0s is None:
                 continue
 
@@ -1271,7 +1193,7 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name):
             if video_writer is None:
                 h, w = im0.shape[:2]
                 fps = vid_cap.get(cv2.CAP_PROP_FPS) or 30
-                fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+                fourcc = cv2.VideoWriter_fourcc(*"mp4v")
                 video_writer = cv2.VideoWriter(video_path, fourcc, fps, (w, h))
 
             detections, det_boxes, det_classes = [], [], []
@@ -1291,16 +1213,16 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name):
             current_centroids = {}
 
             for x1, y1, x2, y2, track_id in tracks.astype(int):
-                cx, cy = (x1+x2)//2, (y1+y2)//2
+                cx, cy = (x1 + x2) // 2, (y1 + y2) // 2
                 best_iou, cls_name = 0, "unknown"
 
                 for i, box in enumerate(det_boxes):
                     xx1, yy1 = max(x1, box[0]), max(y1, box[1])
                     xx2, yy2 = min(x2, box[2]), min(y2, box[3])
-                    inter = max(0, xx2-xx1) * max(0, yy2-yy1)
-                    area1 = (x2-x1)*(y2-y1)
-                    area2 = (box[2]-box[0])*(box[3]-box[1])
-                    iou = inter/(area1+area2-inter+1e-6)
+                    inter = max(0, xx2 - xx1) * max(0, yy2 - yy1)
+                    area1 = (x2 - x1) * (y2 - y1)
+                    area2 = (box[2] - box[0]) * (box[3] - box[1])
+                    iou = inter / (area1 + area2 - inter + 1e-6)
                     if iou > best_iou:
                         best_iou = iou
                         cls_name = names[det_classes[i]].strip().lower()
@@ -1313,7 +1235,7 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name):
                 track_last_seen[track_id] = frame_idx
                 current_centroids[track_id] = (cx, cy, cls_name)
 
-                #color = get_class_color(det_classes[0]) if det_classes else (200,200,200)
+                # color = get_class_color(det_classes[0]) if det_classes else (200,200,200)
                 color = get_class_color(0)  # person class id
                 annotator.box_label([x1, y1, x2, y2], f"{cls_name}", color=color)
 
@@ -1342,15 +1264,15 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name):
                     track_side_memory[obj_id] = current_side
 
             # Draw line
-            cv2.line(im0, (0, line_y), (im0.shape[1], line_y), (0,255,255), 2)
+            cv2.line(im0, (0, line_y), (im0.shape[1], line_y), (0, 255, 255), 2)
 
             # Display counts
             y0 = 90
             for i, cls in enumerate(DISPLAY_CLASSES):
                 text_in = f"{cls} IN : {counts_in[cls]:03d}"
                 text_out = f"{cls} OUT: {counts_out[cls]:03d}"
-                cv2.putText(im0, text_in, (20, y0 + i*50), FONT, 0.8, (0,100,0), 2)
-                cv2.putText(im0, text_out, (20, y0 + 25 + i*50), FONT, 0.8, (0,0,150), 2)
+                cv2.putText(im0, text_in, (20, y0 + i * 50), FONT, 0.8, (0, 100, 0), 2)
+                cv2.putText(im0, text_out, (20, y0 + 25 + i * 50), FONT, 0.8, (0, 0, 150), 2)
 
             im0 = add_logo_top_left(im0)
             im0 = add_diagonal_watermark(im0)
@@ -1368,10 +1290,8 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name):
 
 
 def help():
-    """
-    ============================================================
-    YOLOv5 + SORT Person Counting Script
-    ============================================================
+    """============================================================ YOLOv5 + SORT Person Counting Script.
+    ============================================================.
 
     WHAT THIS SCRIPT DOES
     ---------------------
@@ -1392,16 +1312,12 @@ def help():
     ------------------------------------------------------------
     PIPELINE FLOW
     ------------------------------------------------------------
-    1️⃣ Load YOLOv5 model (DetectMultiBackend)
-    2️⃣ Read input:
+    1️⃣ Load YOLOv5 model (DetectMultiBackend) 2️⃣ Read input:
         - Webcam (source=0)
         - Video file
         - Image folder
-    3️⃣ Run object detection (YOLOv5)
-    4️⃣ Filter detections → ONLY 'person'
-    5️⃣ Track persons using SORT (assign unique IDs)
-    6️⃣ Compute centroid (cx, cy) for each tracked person
-    7️⃣ Check which side of the line the person is on:
+    3️⃣ Run object detection (YOLOv5) 4️⃣ Filter detections → ONLY 'person' 5️⃣ Track persons using SORT (assign unique
+    IDs) 6️⃣ Compute centroid (cx, cy) for each tracked person 7️⃣ Check which side of the line the person is on:
         - above
         - below
         - buffer zone
@@ -1439,37 +1355,27 @@ def help():
     ------------------------------------------------------------
     COMMAND LINE USAGE
     ------------------------------------------------------------
-    python count.py \
-        --weights yolov5s.pt \
-        --source input.mp4 \
-        --imgsz 640 \
-        --conf-thres 0.25 \
-        --iou-thres 0.45 \
-        --device 0 \
-        --project runs/count \
-        --name exp
+    python count.py --weights yolov5s.pt --source input.mp4 --imgsz 640 --conf-thres 0.25 --iou-thres 0.45 --device 0
+    --project runs/count --name exp
 
     ------------------------------------------------------------
-    ARGUMENTS
-    ------------------------------------------------------------
-    --weights     Path to YOLOv5 model weights (required)
-    --source      Input source (video/image/webcam index)
-    --imgsz       Inference image size (default: 640)
-    --conf-thres  Confidence threshold (default: 0.25)
-    --iou-thres   NMS IoU threshold (default: 0.45)
-    --device      CUDA device (0, 1, or 'cpu')
-    --project     Output directory
-    --name        Experiment name
+
+    Args:
+        ---------: --weights Path to YOLOv5 model weights (required) --source Input source (video/image/webcam index)
+        --imgsz       Inference image size (default: 640)
+        --conf-thres  Confidence threshold (default: 0.25)
+        --iou-thres   NMS IoU threshold (default: 0.45) --device CUDA device (0, 1, or 'cpu') --project Output directory
+            --name Experiment name
 
     ------------------------------------------------------------
-    EXIT
+            EXIT
     ------------------------------------------------------------
-    • Press 'q' to stop processing
-    • Video is saved safely on exit
+            • Press 'q' to stop processing
+            • Video is saved safely on exit
 
-    ============================================================
+            ============================================================
     """
-    
+
 
 def parse_opt():
     parser = argparse.ArgumentParser()

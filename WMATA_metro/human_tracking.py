@@ -1,25 +1,19 @@
-
-
-
 ################ sort + yolov5s + roi counting (FULL FRAME VISIBLE) + line counting (SINGLE LINE) + OUTPUT VIDEO WITH COUNTS + ARGPARSE
 
 
-
-
-
-
 import argparse
-import os
-import sys
-from pathlib import Path
-import pathlib
-import cv2
-import torch
-import numpy as np
-from sort.sort import Sort
-import time
-from tqdm import tqdm
 import math
+import os
+import pathlib
+import sys
+import time
+from pathlib import Path
+
+import cv2
+import numpy as np
+import torch
+from sort.sort import Sort
+from tqdm import tqdm
 
 # ================= WINDOWS PATH FIX =================
 temp = pathlib.PosixPath
@@ -31,10 +25,10 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))
 
-from utils.dataloaders import LoadImages, LoadStreams
-from ultralytics.utils.plotting import Annotator
+
 from models.common import DetectMultiBackend
-from utils.general import check_img_size, non_max_suppression, scale_boxes, increment_path
+from utils.dataloaders import LoadImages, LoadStreams
+from utils.general import check_img_size, increment_path, non_max_suppression, scale_boxes
 from utils.torch_utils import select_device, smart_inference_mode
 
 
@@ -108,8 +102,11 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
     stride, names = model.stride, model.names
     imgsz = check_img_size(imgsz, s=stride)
 
-    dataset = LoadStreams(source, img_size=imgsz, stride=stride) \
-        if source.isnumeric() else LoadImages(source, img_size=imgsz, stride=stride)
+    dataset = (
+        LoadStreams(source, img_size=imgsz, stride=stride)
+        if source.isnumeric()
+        else LoadImages(source, img_size=imgsz, stride=stride)
+    )
 
     tracker = Sort(max_age=30, min_hits=2, iou_threshold=0.2)
 
@@ -125,10 +122,13 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
     # ================= ROI =================
     roi_coords = None
     if mode == "roi":
-        temp_ds = LoadStreams(source, img_size=imgsz, stride=stride) \
-            if source.isnumeric() else LoadImages(source, img_size=imgsz, stride=stride)
+        temp_ds = (
+            LoadStreams(source, img_size=imgsz, stride=stride)
+            if source.isnumeric()
+            else LoadImages(source, img_size=imgsz, stride=stride)
+        )
 
-        path, im, im0s, vid_cap, s = next(iter(temp_ds))
+        path, im, im0s, _vid_cap, _s = next(iter(temp_ds))
         frame = im0s[0].copy() if isinstance(im0s, list) else im0s.copy()
         roi_coords = select_roi_with_mouse(frame)
         if roi_coords is None:
@@ -143,14 +143,14 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
     writer = None
 
     # ================= TRACK MEMORY =================
-    track_memory = {}   # tid -> (cx, cy, last_seen_frame)
+    track_memory = {}  # tid -> (cx, cy, last_seen_frame)
     frame_idx = 0
     MAX_MEMORY_FRAMES = 60
 
     # ================= LOOP =================
     for data in tqdm(dataset, desc="Processing"):
         frame_idx += 1
-        path, im, im0s, cap, _ = data
+        _path, im, im0s, cap, _ = data
         im0 = im0s[0].copy() if isinstance(im0s, list) else im0s.copy()
 
         im = torch.from_numpy(im).to(device).float() / 255.0
@@ -163,11 +163,7 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
         if writer is None:
             h, w = im0.shape[:2]
             fps = cap.get(cv2.CAP_PROP_FPS) if cap else 30
-            writer = cv2.VideoWriter(
-                str(out_path),
-                cv2.VideoWriter_fourcc(*"mp4v"),
-                fps, (w, h)
-            )
+            writer = cv2.VideoWriter(str(out_path), cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
         detections = []
 
@@ -205,14 +201,10 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
                     counted_ids.add(tid)
 
             cv2.rectangle(im0, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            cv2.putText(im0, f"ID {tid}", (x1, y1 - 5),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
+            cv2.putText(im0, f"ID {tid}", (x1, y1 - 5), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
 
         # ================= CLEAN OLD IDS =================
-        expired = [
-            tid for tid, (_, _, last) in track_memory.items()
-            if frame_idx - last > MAX_MEMORY_FRAMES
-        ]
+        expired = [tid for tid, (_, _, last) in track_memory.items() if frame_idx - last > MAX_MEMORY_FRAMES]
         for tid in expired:
             del track_memory[tid]
 
@@ -222,8 +214,7 @@ def run(weights, source, imgsz, conf_thres, iou_thres, device, project, name, mo
         if mode == "line":
             cv2.line(im0, (0, line_y), (im0.shape[1], line_y), (0, 255, 255), 2)
 
-        cv2.putText(im0, f"COUNT: {counts['person']}",
-                    (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
+        cv2.putText(im0, f"COUNT: {counts['person']}", (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 0, 255), 3)
 
         writer.write(im0)
 
@@ -250,28 +241,3 @@ def parse_opt():
 if __name__ == "__main__":
     opt = parse_opt()
     run(**vars(opt))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
