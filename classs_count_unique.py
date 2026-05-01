@@ -19,12 +19,14 @@ labels_dir = r"C:\Users\admin\Downloads\crown (2)\crown\crown\images\txt_labels"
 # Helpers
 # =========================
 
+
 def is_int(val):
     try:
         int(val)
         return True
     except ValueError:
         return False
+
 
 # =========================
 # Analyze labels
@@ -40,7 +42,7 @@ for file in os.listdir(labels_dir):
 
     file_path = os.path.join(labels_dir, file)
 
-    with open(file_path, "r") as f:
+    with open(file_path) as f:
         for line in f:
             line = line.strip()
             if not line:
@@ -69,12 +71,6 @@ for cid in sorted(class_count):
     print(f"Class {cid}: {class_count[cid]} objects")
 
 print(f"\n⚠️ Skipped invalid lines: {skipped_lines}")
-
-
-
-
-
-
 
 
 # import os

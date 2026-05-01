@@ -183,35 +183,22 @@
 #     run(**vars(opt))
 
 
-
-
-
-
-
-
-
-
-
-
-
 ############### working for the crown counting task, adapted from track_count_line.py and overlap_alert.py, with a focus on counting objects crossing a line and maintaining a set of detected classes with counts. It saves both raw and annotated videos, and handles graceful exit on signals. The code is structured for clarity and maintainability, with utility functions for drawing text and determining zones.
 
 
-
-
-
 import argparse
+import os
+import pathlib
+import signal
 import sys
 import time
 import traceback
 from pathlib import Path
+
 import cv2
-import torch
 import numpy as np
-import os
-import pathlib
+import torch
 from tqdm import tqdm
-import signal
 
 # ================= WINDOWS PATH FIX =================
 temp = pathlib.PosixPath
@@ -225,11 +212,12 @@ if str(ROOT) not in sys.path:
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))
 
 # ================= YOLOv5 =================
+from sort.sort import Sort
+
 from models.common import DetectMultiBackend
 from utils.dataloaders import LoadImages, LoadStreams
 from utils.general import check_img_size, non_max_suppression, scale_boxes
 from utils.torch_utils import select_device, smart_inference_mode
-from sort.sort import Sort
 
 # ================= CONFIG =================
 LINE_X = 800
@@ -240,6 +228,7 @@ STOP_REQUESTED = False
 detected_classes = set()
 detected_class_counts = {}
 
+
 def request_stop(sig=None, frame=None):
     global STOP_REQUESTED
     STOP_REQUESTED = True
@@ -248,6 +237,7 @@ def request_stop(sig=None, frame=None):
 
 signal.signal(signal.SIGINT, request_stop)
 signal.signal(signal.SIGTERM, request_stop)
+
 
 # ================= UTILITIES =================
 def get_class_color(cls_name):
@@ -285,7 +275,7 @@ def draw_text_with_gold_box(
     border_color=(0, 215, 255),
     thickness=1,
     padding=5,
-    border_thickness=1
+    border_thickness=1,
 ):
     x, y = pos
     (w, h), baseline = cv2.getTextSize(text, font, font_scale, thickness)
@@ -302,16 +292,7 @@ def draw_text_with_gold_box(
 
 # ==================================================
 @smart_inference_mode()
-def run(
-    weights,
-    source,
-    imgsz=640,
-    conf_thres=0.25,
-    iou_thres=0.45,
-    device="",
-    project="runs/count",
-    name="exp"
-):
+def run(weights, source, imgsz=640, conf_thres=0.25, iou_thres=0.45, device="", project="runs/count", name="exp"):
     raw_writer = None
     ann_writer = None
     frame_idx = 0
@@ -334,8 +315,11 @@ def run(
         imgsz = check_img_size(imgsz, s=stride)
         model.warmup(imgsz=(1, 3, imgsz, imgsz))
 
-        dataset = LoadStreams(source, img_size=imgsz, stride=stride) \
-            if is_webcam else LoadImages(source, img_size=imgsz, stride=stride)
+        dataset = (
+            LoadStreams(source, img_size=imgsz, stride=stride)
+            if is_webcam
+            else LoadImages(source, img_size=imgsz, stride=stride)
+        )
 
         tracker = Sort(max_age=30, min_hits=2, iou_threshold=0.2)
 
@@ -351,7 +335,7 @@ def run(
 
             try:
                 frame_idx += 1
-                path, im, im0s, vid_cap, s = data
+                _path, im, im0s, vid_cap, _s = data
 
                 raw_frame = im0s[0].copy() if isinstance(im0s, list) else im0s.copy()
                 frame = raw_frame.copy()
@@ -365,9 +349,7 @@ def run(
 
                 detections = []
                 if pred and len(pred[0]):
-                    pred[0][:, :4] = scale_boxes(
-                        im.shape[2:], pred[0][:, :4], frame.shape
-                    ).round()
+                    pred[0][:, :4] = scale_boxes(im.shape[2:], pred[0][:, :4], frame.shape).round()
 
                     for *xyxy, conf, cls in pred[0]:
                         x1, y1, x2, y2 = map(int, xyxy)
@@ -380,9 +362,7 @@ def run(
                         # detected_classes.add(cls_name)
                         # detected_class_counts[cls_name] = detected_class_counts.get(cls_name, 0) + 1
 
-                tracks = tracker.update(
-                    np.array([d[:5] for d in detections]) if detections else np.empty((0, 5))
-                )
+                tracks = tracker.update(np.array([d[:5] for d in detections]) if detections else np.empty((0, 5)))
 
                 now = time.time()
 
@@ -434,9 +414,15 @@ def run(
 
                     color = get_class_color(cls_name)
                     cv2.rectangle(frame, (x1, y1), (x2, y2), color, 1)
-                    cv2.putText(frame, f"{cls_name} ID:{track_id}",
-                                (x1, max(20, y1 - 6)),
-                                cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 1)
+                    cv2.putText(
+                        frame,
+                        f"{cls_name} ID:{track_id}",
+                        (x1, max(20, y1 - 6)),
+                        cv2.FONT_HERSHEY_SIMPLEX,
+                        0.6,
+                        color,
+                        1,
+                    )
 
                 # Draw lines
                 cv2.line(frame, (LINE_X, 0), (LINE_X, frame.shape[0]), (0, 255, 255), 2)
@@ -449,13 +435,13 @@ def run(
                         frame,
                         f"{cls}  IN:{count_in.get(cls, 0)}  OUT:{count_out.get(cls, 0)}",
                         (15, y),
-                        font_scale=0.6,        # ⬅ smaller text
+                        font_scale=0.6,  # ⬅ smaller text
                         thickness=1,
-                        padding=2,             # ⬅ tighter box
+                        padding=2,  # ⬅ tighter box
                         border_thickness=1,
-                        text_color=get_class_color(cls)
+                        text_color=get_class_color(cls),
                     )
-                    y += 20                   # ⬅ tighter spacing                     # ⬅ tighter vertical spacing
+                    y += 20  # ⬅ tighter spacing                     # ⬅ tighter vertical spacing
 
                 if raw_writer is None:
                     h, w = frame.shape[:2]
@@ -496,15 +482,12 @@ def run(
 
 
 def help():
-    """
-    ============================================================
-    YOLOv5 + SORT LINE-CROSSING COUNTING SYSTEM
-    ============================================================
+    """============================================================ YOLOv5 + SORT LINE-CROSSING COUNTING SYSTEM.
+    ============================================================.
 
     OVERVIEW
     --------
-    This script performs real-time object detection, tracking,
-    and directional counting using:
+    This script performs real-time object detection, tracking, and directional counting using:
 
     • YOLOv5 for object detection
     • SORT for object tracking
@@ -542,8 +525,7 @@ def help():
     ------------------------------------------------------------
     DIRECTION RULES
     ------------------------------------------------------------
-    LEFT  → RIGHT  → counted as IN
-    RIGHT → LEFT   → counted as OUT
+    LEFT → RIGHT → counted as IN RIGHT → LEFT → counted as OUT
 
     ------------------------------------------------------------
     DOUBLE COUNT PREVENTION
@@ -594,39 +576,26 @@ def help():
     ------------------------------------------------------------
     COMMAND LINE USAGE
     ------------------------------------------------------------
-    python count.py \
-        --weights yolov5s.pt \
-        --source input.mp4 \
-        --imgsz 640 \
-        --conf-thres 0.25 \
-        --iou-thres 0.45 \
-        --device 0 \
-        --project runs/count \
-        --name exp
+    python count.py --weights yolov5s.pt --source input.mp4 --imgsz 640 --conf-thres 0.25 --iou-thres 0.45 --device 0
+    --project runs/count --name exp
 
     ------------------------------------------------------------
     ARGUMENT DETAILS
     ------------------------------------------------------------
-    --weights     Path to YOLOv5 weights (required)
-    --source      Input source (video / webcam / RTSP)
-    --imgsz       Inference image size (default: 640)
-    --conf-thres  Detection confidence threshold
-    --iou-thres   NMS IoU threshold
-    --device      CUDA device ID or 'cpu'
-    --project     Output root directory
-    --name        Experiment name
+    --weights Path to YOLOv5 weights (required) --source Input source (video / webcam / RTSP) --imgsz Inference image
+    size (default: 640) --conf-thres Detection confidence threshold --iou-thres NMS IoU threshold --device CUDA device
+    ID or 'cpu' --project Output root directory --name Experiment name
 
     ------------------------------------------------------------
     FINAL NOTES
     ------------------------------------------------------------
-    ✔ Robust to dropped frames
-    ✔ Prevents duplicate counting
-    ✔ Handles graceful shutdown
-    ✔ Suitable for traffic / people / object flow counting
+    ✔ Robust to dropped frames ✔ Prevents duplicate counting ✔ Handles graceful shutdown ✔ Suitable for traffic / people
+    / object flow counting
 
     ============================================================
     """
-    
+
+
 # ================= CLI =================
 def parse_opt():
     parser = argparse.ArgumentParser()
@@ -645,18 +614,3 @@ if __name__ == "__main__":
     opt = parse_opt()
     print(help.__doc__)
     run(**vars(opt))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,5 +1,6 @@
-from PIL import Image
 import os
+
+from PIL import Image
 
 # Input and output folders"
 input_folder = r"C:\Users\admin\Downloads\122025 Citi\122025 Citi"

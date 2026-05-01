@@ -1,6 +1,8 @@
-import cv2
 import os
 from glob import glob
+
+import cv2
+
 
 def help():
     print("""
@@ -88,7 +90,10 @@ NOTES
 
 ========================================================
 """)
+
+
 help()
+
 
 def images_to_video(image_folder, output_path, fps=30):
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
@@ -112,7 +117,7 @@ def images_to_video(image_folder, output_path, fps=30):
     height, width, _ = first_frame.shape
     size = (width, height)
 
-    fourcc = cv2.VideoWriter_fourcc(*'MJPG')
+    fourcc = cv2.VideoWriter_fourcc(*"MJPG")
     out = cv2.VideoWriter(output_path, fourcc, fps, size)
 
     if not out.isOpened():
@@ -136,5 +141,5 @@ def images_to_video(image_folder, output_path, fps=30):
 images_to_video(
     r"C:\Users\admin\Downloads\overlap_dataset\overlap_dataset",
     r"C:\Users\admin\Downloads\overlap_dataset\overlap_dataset\output.avi",
-    fps=1
+    fps=1,
 )

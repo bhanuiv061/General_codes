@@ -1,9 +1,10 @@
-import cv2
-import numpy as np
 import os
 
+import cv2
+import numpy as np
+
 # --- Load image ---
-image_path = r"D:\bhanu\tata_zaid_sunmission\All_defects_\glass\300ml\surface\gp_bis_317898.jpg"   # change this to your image filename
+image_path = r"D:\bhanu\tata_zaid_sunmission\All_defects_\glass\300ml\surface\gp_bis_317898.jpg"  # change this to your image filename
 image = cv2.imread(image_path, cv2.IMREAD_UNCHANGED)
 
 # Check image load
@@ -18,8 +19,8 @@ else:
     a = None
 
 # --- Define color bounds (BGR order for OpenCV) ---
-lower = np.array([24, 45, 37], dtype=np.uint8)    # B, G, R
-upper = np.array([106, 127, 116], dtype=np.uint8) # B, G, R
+lower = np.array([24, 45, 37], dtype=np.uint8)  # B, G, R
+upper = np.array([106, 127, 116], dtype=np.uint8)  # B, G, R
 
 # --- Create mask ---
 mask = cv2.inRange(image[:, :, :3], lower, upper)
