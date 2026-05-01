@@ -1,6 +1,7 @@
-import cv2
 import os
 from datetime import datetime
+
+import cv2
 
 # -----------------------------
 # Input Video
@@ -8,7 +9,7 @@ from datetime import datetime
 video_path = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\personal_projects\iron_\input_video\v2.mp4"
 
 # Custom frame skip
-skip_frames = 5   # save every 5th frame
+skip_frames = 5  # save every 5th frame
 
 # -----------------------------
 # Get video filename

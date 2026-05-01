@@ -1,6 +1,7 @@
+import re
+
 import cv2
 import easyocr
-import re
 
 img_path = r"C:\Users\admin\Downloads\crown\1.png"
 img = cv2.imread(img_path)
@@ -9,14 +10,10 @@ img = cv2.imread(img_path)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
 # Initialize EasyOCR reader
-reader = easyocr.Reader(['en'], gpu=False)
+reader = easyocr.Reader(["en"], gpu=False)
 
 # Run OCR
-results = reader.readtext(
-    gray,
-    detail=1,
-    paragraph=False
-)
+results = reader.readtext(gray, detail=1, paragraph=False)
 
 # Extract UN number using regex
 un_number = None
@@ -30,13 +27,6 @@ for bbox, text, conf in results:
             break
 
 print("Detected UN Number:", un_number)
-
-
-
-
-
-
-
 
 
 # import os

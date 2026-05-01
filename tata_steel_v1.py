@@ -2,10 +2,10 @@ import argparse
 import os
 import sys
 from pathlib import Path
-import torch
-import numpy as np
-import cv2
 
+import cv2
+import numpy as np
+import torch
 from sort.sort import Sort
 
 FILE = Path(__file__).resolve()
@@ -16,7 +16,7 @@ ROOT = Path(os.path.relpath(ROOT, Path.cwd()))
 
 from models.common import DetectMultiBackend
 from utils.dataloaders import LoadImages, LoadStreams
-from utils.general import check_img_size, non_max_suppression, scale_boxes, increment_path
+from utils.general import check_img_size, increment_path, non_max_suppression, scale_boxes
 from utils.torch_utils import select_device, smart_inference_mode
 
 tracker = Sort(max_age=30, min_hits=2, iou_threshold=0.3)
@@ -25,6 +25,7 @@ counted_ids = set()
 class_counts = {}
 track_class_map = {}
 track_last_x = {}
+
 
 def compute_iou(boxA, boxB):
     xA = max(boxA[0], boxB[0])
@@ -36,8 +37,18 @@ def compute_iou(boxA, boxB):
     boxBArea = (boxB[2] - boxB[0]) * (boxB[3] - boxB[1])
     return interArea / float(boxAArea + boxBArea - interArea + 1e-6)
 
+
 @smart_inference_mode()
-def run(weights="yolov5s-seg.pt", source="0", imgsz=(640, 640), conf_thres=0.25, iou_thres=0.45, device="", project="runs/output", name="exp"):
+def run(
+    weights="yolov5s-seg.pt",
+    source="0",
+    imgsz=(640, 640),
+    conf_thres=0.25,
+    iou_thres=0.45,
+    device="",
+    project="runs/output",
+    name="exp",
+):
     global class_counts
 
     save_dir = increment_path(Path(project) / name, exist_ok=True)
@@ -106,7 +117,7 @@ def run(weights="yolov5s-seg.pt", source="0", imgsz=(640, 640), conf_thres=0.25,
                 best_iou = 0
                 best_cls = None
 
-                for (dx1, dy1, dx2, dy2, cls_id) in det_info:
+                for dx1, dy1, dx2, dy2, cls_id in det_info:
                     iou = compute_iou([x1, y1, x2, y2], [dx1, dy1, dx2, dy2])
                     if iou > best_iou:
                         best_iou = iou
@@ -162,6 +173,7 @@ def run(weights="yolov5s-seg.pt", source="0", imgsz=(640, 640), conf_thres=0.25,
             if cv2.waitKey(1) == 27:
                 return
 
+
 def parse_opt():
     parser = argparse.ArgumentParser()
     parser.add_argument("--weights", type=str, default="yolov5s-seg.pt")
@@ -176,8 +188,10 @@ def parse_opt():
     opt.imgsz *= 2 if len(opt.imgsz) == 1 else 1
     return opt
 
+
 def main(opt):
     run(**vars(opt))
+
 
 if __name__ == "__main__":
     opt = parse_opt()

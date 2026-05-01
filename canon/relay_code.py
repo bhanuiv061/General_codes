@@ -1,5 +1,3 @@
-
-
 # ############################## watch dog working ########################
 
 # import time
@@ -44,9 +42,6 @@
 #         time.sleep(CHECK_INTERVAL)
 
 
-
-
-
 import pyhid_usb_relay
 
 relay = pyhid_usb_relay.find()
@@ -58,7 +53,7 @@ while True:
     cmd = input(">> ").strip().lower()
 
     if cmd == "on":
-        relay.set_state(1, True)   # CH1 ON
+        relay.set_state(1, True)  # CH1 ON
         print("Relay CH1: ON")
 
     elif cmd == "off":
@@ -91,14 +86,14 @@ while True:
 # import serial
 # import time
 
-# ser = serial.Serial('COM5', 9600, timeout=1)
+# set = serial.Serial('COM5', 9600, timeout=1)
 # time.sleep(2)
 
 # # Relay ON (example command)
-# ser.write(b'\xA0\x01\x01\xA2')  # Relay 1 ON
+# set.write(b'\xA0\x01\x01\xA2')  # Relay 1 ON
 # time.sleep(2)
 
 # # Relay OFF
-# ser.write(b'\xA0\x01\x00\xA1')  # Relay 1 OFF
+# set.write(b'\xA0\x01\x00\xA1')  # Relay 1 OFF
 
-# ser.close()
+# set.close()
