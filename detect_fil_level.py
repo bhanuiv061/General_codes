@@ -1,12 +1,13 @@
 import argparse
 import csv
 import os
+import pathlib
 import platform
 import sys
 from pathlib import Path
 
 import torch
-import pathlib
+
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
 
@@ -16,7 +17,8 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))
 
-from ultralytics.utils.plotting import Annotator, colors, save_one_box
+from ultralytics.utils.plotting import Annotator, save_one_box
+
 from models.common import DetectMultiBackend
 from utils.dataloaders import IMG_FORMATS, VID_FORMATS, LoadImages, LoadScreenshots, LoadStreams
 from utils.general import (
@@ -33,7 +35,6 @@ from utils.general import (
     print_args,
     scale_boxes,
     strip_optimizer,
-    xyxy2xywh,
 )
 from utils.torch_utils import select_device, smart_inference_mode
 
@@ -139,16 +140,16 @@ def run(
         for i, det in enumerate(pred):
             seen += 1
             if webcam:
-                p, im0, frame = path[i], im0s[i].copy(), dataset.count
+                p, im0, _frame = path[i], im0s[i].copy(), dataset.count
                 s += f"{i}: "
             else:
-                p, im0, frame = path, im0s.copy(), getattr(dataset, "frame", 0)
+                p, im0, _frame = path, im0s.copy(), getattr(dataset, "frame", 0)
 
             p = Path(p)
             save_path = str(save_dir / p.name)
-            txt_path = str(save_dir / "labels" / p.stem)
+            str(save_dir / "labels" / p.stem)
             s += "{:g}x{:g} ".format(*im.shape[2:])
-            gn = torch.tensor(im0.shape)[[1, 0, 1, 0]]
+            torch.tensor(im0.shape)[[1, 0, 1, 0]]
             imc = im0.copy() if save_crop else im0
             annotator = Annotator(im0, line_width=2, example=str(names))
 
@@ -157,7 +158,7 @@ def run(
 
                 # Draw reference line once per frame
                 line_y = int(im0.shape[0] * 0.485)
-                #cv2.line(im0, (0, line_y), (im0.shape[1], line_y), (0, 255, 255), 2)
+                # cv2.line(im0, (0, line_y), (im0.shape[1], line_y), (0, 255, 255), 2)
 
                 for *xyxy, conf, cls in reversed(det):
                     c = int(cls)
@@ -168,7 +169,7 @@ def run(
                     # Calculate centroid
                     x1, y1, x2, y2 = map(int, xyxy)
                     cx, cy = int((x1 + x2) / 2), int((y1 + y2) / 2)
-                    print(cx,cy)
+                    print(cx, cy)
                     cv2.circle(im0, (cx, cy), 6, (255, 255, 255), -1)  # centroid marker
 
                     # Determine fill status
@@ -200,7 +201,6 @@ def run(
                     # Optional: log to CSV
                     if save_csv:
                         write_to_csv(p.name, label, confidence_str, status)
-
 
                     # Draw bbox
                     annotator.box_label(xyxy, label, color=color)

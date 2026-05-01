@@ -1,13 +1,13 @@
-
 import argparse
 import csv
 import os
+import pathlib
 import platform
 import sys
 from pathlib import Path
 
 import torch
-import pathlib
+
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
 FILE = Path(__file__).resolve()
@@ -71,9 +71,7 @@ def run(
     dnn=False,  # use OpenCV DNN for ONNX inference
     vid_stride=1,  # video frame-rate stride
 ):
-   
 
-   
     source = str(source)
     save_img = not nosave and not source.endswith(".txt")  # save inference images
     is_file = Path(source).suffix[1:] in (IMG_FORMATS + VID_FORMATS)
@@ -247,7 +245,6 @@ def run(
         strip_optimizer(weights[0])  # update model (to fix SourceChangeWarning)
 
 
-
 def help():
     print("""
 ========================================================
@@ -395,9 +392,7 @@ NOTES
     sys.exit(0)
 
 
-
 def parse_opt():
-
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--weights", nargs="+", type=str, default=ROOT / "yolov5s.pt", help="model path or triton URL")
@@ -441,7 +436,6 @@ def parse_opt():
 
 
 def main(opt):
-
 
     check_requirements(ROOT / "requirements.txt", exclude=("tensorboard", "thop"))
     run(**vars(opt))

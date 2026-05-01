@@ -1,10 +1,12 @@
+import os
 import sys
-import cv2
-import torch
-import numpy as np
-from pathlib import Path
 from collections import defaultdict
-import os 
+from pathlib import Path
+
+import cv2
+import numpy as np
+import torch
+
 
 def help():
     print("""
@@ -127,11 +129,13 @@ def safe_imshow(win_name, frame):
     except cv2.error:
         return False
 
+
 # ---------------- YOLOv5 IMPORT ----------------
 FILE = Path(__file__).resolve()
-ROOT = FILE.parents[0] / 'yolov5-master'
+ROOT = FILE.parents[0] / "yolov5-master"
 sys.path.append(str(ROOT))
 import pathlib
+
 temp = pathlib.PosixPath
 pathlib.PosixPath = pathlib.WindowsPath
 FILE = Path(__file__).resolve()
@@ -140,13 +144,14 @@ if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))  # add ROOT to PATH
 ROOT = Path(os.path.relpath(ROOT, Path.cwd()))  # relative
 from models.common import DetectMultiBackend
+from utils.augmentations import letterbox
 from utils.general import non_max_suppression, scale_boxes
 from utils.torch_utils import select_device
-from utils.augmentations import letterbox
 
 # ---------------- SORT TRACKER ----------------
-sys.path.append(str(FILE.parents[0] / 'sort'))
+sys.path.append(str(FILE.parents[0] / "sort"))
 from sort import Sort
+
 
 # ---------------- UNIQUE OBJECT COUNTER ----------------
 class UniqueObjectCounter:
@@ -162,7 +167,7 @@ class UniqueObjectCounter:
             best_iou = 0
             best_class = None
             for det in detections:
-                dx1, dy1, dx2, dy2, conf, cls = det
+                dx1, dy1, dx2, dy2, _conf, cls = det
                 iou = self.iou(track_box, [dx1, dy1, dx2, dy2])
                 if iou > best_iou:
                     best_iou = iou
@@ -174,11 +179,10 @@ class UniqueObjectCounter:
     def iou(self, A, B):
         xA, yA = max(A[0], B[0]), max(A[1], B[1])
         xB, yB = min(A[2], B[2]), min(A[3], B[3])
-        inter = max(0, xB-xA) * max(0, yB-yA)
-        areaA = (A[2]-A[0])*(A[3]-A[1])
-        areaB = (B[2]-B[0])*(B[3]-B[1])
+        inter = max(0, xB - xA) * max(0, yB - yA)
+        areaA = (A[2] - A[0]) * (A[3] - A[1])
+        areaB = (B[2] - B[0]) * (B[3] - B[1])
         return inter / (areaA + areaB - inter + 1e-6)
-    
 
     def get_counts(self):
         result = {}
@@ -190,6 +194,8 @@ class UniqueObjectCounter:
                 name = f"class_{c}"
             result[name] = len(ids)
         return result
+
+
 # ---------------- LINE COUNTER ----------------
 class LineCounter:
     def __init__(self, line_position, mode="both"):
@@ -201,7 +207,7 @@ class LineCounter:
 
     def update(self, tracks):
         for track in tracks:
-            x1, y1, x2, y2, track_id = map(int, track)
+            _x1, y1, _x2, y2, track_id = map(int, track)
             cy = int((y1 + y2) / 2)
 
             if track_id not in self.track_memory:
@@ -221,11 +227,11 @@ class LineCounter:
             self.track_memory[track_id] = cy
 
     def draw(self, frame):
-        h, w, _ = frame.shape
+        _h, w, _ = frame.shape
         cv2.line(frame, (0, self.line_y), (w, self.line_y), (255, 0, 0), 2)
         text = f"Entry: {self.entry_count}  Exit: {self.exit_count}"
-        cv2.putText(frame, text, (20, self.line_y - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+        cv2.putText(frame, text, (20, self.line_y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 0, 0), 2)
+
 
 # ---------------- MAIN PIPELINE ----------------
 def run(weights, source, line_mode, project, name, conf_thres, iou_thres, view_img):
@@ -233,7 +239,7 @@ def run(weights, source, line_mode, project, name, conf_thres, iou_thres, view_i
     save_dir = Path(project) / name
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    device = select_device('')
+    device = select_device("")
     model = DetectMultiBackend(weights, device=device)
     stride, names = model.stride, model.names
 
@@ -247,7 +253,7 @@ def run(weights, source, line_mode, project, name, conf_thres, iou_thres, view_i
     h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
     out_video_path = str(save_dir / "output.mp4")
-    writer = cv2.VideoWriter(out_video_path, cv2.VideoWriter_fourcc(*'mp4v'), fps, (w, h))
+    writer = cv2.VideoWriter(out_video_path, cv2.VideoWriter_fourcc(*"mp4v"), fps, (w, h))
 
     while True:
         ret, frame = cap.read()
@@ -281,24 +287,21 @@ def run(weights, source, line_mode, project, name, conf_thres, iou_thres, view_i
 
         for track in tracks:
             x1, y1, x2, y2, track_id = map(int, track)
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0,255,0), 2)
-            cv2.putText(frame, f'ID {track_id}', (x1, y1-10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0,255,0), 2)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.putText(frame, f"ID {track_id}", (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
 
         counts = unique_counter.get_counts()
         y_text = 30
         for cls, cnt in counts.items():
-            cv2.putText(frame, f"{cls}: {cnt}", (20, y_text),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0,0,255), 2)
+            cv2.putText(frame, f"{cls}: {cnt}", (20, y_text), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 255), 2)
             y_text += 25
 
         line_counter.draw(frame)
         writer.write(frame)
         if view_img:
             shown = safe_imshow("Tracking + Line Counter", frame)
-            if shown and cv2.waitKey(1) & 0xFF == ord('q'):
+            if shown and cv2.waitKey(1) & 0xFF == ord("q"):
                 break
-
 
     cap.release()
     writer.release()
@@ -314,24 +317,24 @@ def run(weights, source, line_mode, project, name, conf_thres, iou_thres, view_i
 
     print(f"\nResults saved to: {save_dir}")
 
+
 # ---------------- ARGPARSE ----------------
 if __name__ == "__main__":
-    if '--help-script' in sys.argv:
+    if "--help-script" in sys.argv:
         help()
     import argparse
+
     parser = argparse.ArgumentParser()
-    parser.add_argument('--weights', type=str, default='yolov5s.pt')
-    parser.add_argument('--source', type=str, default='0')
-    parser.add_argument('--line_mode', type=str, default='both', choices=['entry', 'exit', 'both'])
-    parser.add_argument('--project', type=str, default='runs/count')
-    parser.add_argument('--name', type=str, default='exp')
-    parser.add_argument('--conf-thres', type=float, default=0.25)
-    parser.add_argument('--iou-thres', type=float, default=0.45)
-    parser.add_argument('--view-img', action='store_true', help='show results window')
+    parser.add_argument("--weights", type=str, default="yolov5s.pt")
+    parser.add_argument("--source", type=str, default="0")
+    parser.add_argument("--line_mode", type=str, default="both", choices=["entry", "exit", "both"])
+    parser.add_argument("--project", type=str, default="runs/count")
+    parser.add_argument("--name", type=str, default="exp")
+    parser.add_argument("--conf-thres", type=float, default=0.25)
+    parser.add_argument("--iou-thres", type=float, default=0.45)
+    parser.add_argument("--view-img", action="store_true", help="show results window")
 
     args = parser.parse_args()
 
     source = int(args.source) if args.source.isnumeric() else args.source
-    run(args.weights, source, args.line_mode, args.project, args.name,
-        args.conf_thres, args.iou_thres, args.view_img)
-
+    run(args.weights, source, args.line_mode, args.project, args.name, args.conf_thres, args.iou_thres, args.view_img)

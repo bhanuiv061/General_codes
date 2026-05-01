@@ -1,6 +1,7 @@
 import os
-import cv2
+
 import albumentations as A
+import cv2
 
 IMAGE_DIR = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\personal_projects\iron_\data\images"
 LABEL_DIR = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\personal_projects\iron_\data\labels_yolo"
@@ -10,6 +11,7 @@ AUG_LABEL_DIR = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\personal_proj
 
 os.makedirs(AUG_IMAGE_DIR, exist_ok=True)
 os.makedirs(AUG_LABEL_DIR, exist_ok=True)
+
 
 # -------------------------
 # Load YOLO segmentation
@@ -27,7 +29,7 @@ def load_yolo_seg(txt_path):
 
             poly = []
             for i in range(0, len(coords), 2):
-                poly.append((coords[i], coords[i+1]))
+                poly.append((coords[i], coords[i + 1]))
 
             polys.append(poly)
 
@@ -40,9 +42,7 @@ def load_yolo_seg(txt_path):
 def save_yolo_seg(path, polys, labels):
 
     with open(path, "w") as f:
-
         for poly, cls in zip(polys, labels):
-
             flat = []
 
             for x, y in poly:
@@ -59,14 +59,8 @@ def save_yolo_seg(path, polys, labels):
 # Augmentation pipeline
 # -------------------------
 transform = A.Compose(
-    [
-        A.HorizontalFlip(p=1),
-        A.RandomBrightnessContrast(p=1)
-    ],
-    keypoint_params=A.KeypointParams(
-        format="xy",
-        remove_invisible=False
-    )
+    [A.HorizontalFlip(p=1), A.RandomBrightnessContrast(p=1)],
+    keypoint_params=A.KeypointParams(format="xy", remove_invisible=False),
 )
 
 
@@ -74,7 +68,6 @@ transform = A.Compose(
 # Process images
 # -------------------------
 for img_name in os.listdir(IMAGE_DIR):
-
     if not img_name.lower().endswith((".jpg", ".png", ".jpeg")):
         continue
 
@@ -107,11 +100,9 @@ for img_name in os.listdir(IMAGE_DIR):
     idx = 0
 
     for l in poly_lengths:
-
         poly = []
 
         for _ in range(l):
-
             x, y = new_keypoints[idx]
             idx += 1
 
@@ -125,17 +116,10 @@ for img_name in os.listdir(IMAGE_DIR):
     # save image
     aug_img_name = f"{base}_mirror_bright.jpg"
 
-    cv2.imwrite(
-        os.path.join(AUG_IMAGE_DIR, aug_img_name),
-        new_image
-    )
+    cv2.imwrite(os.path.join(AUG_IMAGE_DIR, aug_img_name), new_image)
 
     # save label
-    save_yolo_seg(
-        os.path.join(AUG_LABEL_DIR, f"{base}_mirror_bright.txt"),
-        new_polys,
-        labels
-    )
+    save_yolo_seg(os.path.join(AUG_LABEL_DIR, f"{base}_mirror_bright.txt"), new_polys, labels)
 
     print(f"✅ Augmented {img_name}")
 

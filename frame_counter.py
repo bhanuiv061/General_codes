@@ -1,10 +1,16 @@
 import cv2
 
 # Load input video
-cap = cv2.VideoCapture(r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\TATA_V3_HIMALAYA\image_data_\day_1_(05_12_25)\tata_meach_side_view_images\bp_images\testing_unseen\cam 7 (DA5392480)\hair_cabl_2.avi")
-fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-out = cv2.VideoWriter("D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\TATA_V3_HIMALAYA\image_data_\day_1_(05_12_25)\tata_meach_side_view_images\bp_images\testing_unseen\cam 7 (DA5392480)\hair_cabl_2.avi", fourcc, cap.get(cv2.CAP_PROP_FPS),
-                      (int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))))
+cap = cv2.VideoCapture(
+    r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\TATA_V3_HIMALAYA\image_data_\day_1_(05_12_25)\tata_meach_side_view_images\bp_images\testing_unseen\cam 7 (DA5392480)\hair_cabl_2.avi"
+)
+fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+out = cv2.VideoWriter(
+    "D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\TATA_V3_HIMALAYA\image_data_\day_1_(05_12_25)\tata_meach_side_view_images\bp_images\testing_unseen\cam 7 (DA5392480)\hair_cabl_2.avi",
+    fourcc,
+    cap.get(cv2.CAP_PROP_FPS),
+    (int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT)), int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))),
+)
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -19,7 +25,7 @@ cap.release()
 out.release()
 
 
-#"D:\bhanu\tata_paid_demo\gp_particles\raw_test\MV-CS032-60GC (DA5392478)\gp_paricle20250711152724053.avi"
+# "D:\bhanu\tata_paid_demo\gp_particles\raw_test\MV-CS032-60GC (DA5392478)\gp_paricle20250711152724053.avi"
 
 
 # import cv2
@@ -35,20 +41,6 @@ out.release()
 #     frame = cv2.imread(img_path)
 #     rotated = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)
 #     cv2.imwrite(img_path, rotated)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 # import cv2
@@ -83,36 +75,30 @@ out.release()
 # print("🎉 All images rotated successfully.")
 
 
-
-
-
-
-
-
+import os
 
 import cv2
-import os
- 
+
 video_path = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\Spritzer_pet_water\spritizer_v3\paper\cam 7 (DA5392480)\cable_0_5_32.avi"
 output_dir = r"D:\bhanu\OneDrive - Imagevision.ai India Pvt Ltd\bhanu_iv061\Spritzer_pet_water\spritizer_v3\paper\cam 7 (DA5392480)\cable_0_5_32"
 os.makedirs(output_dir, exist_ok=True)
- 
+
 cap = cv2.VideoCapture(video_path)
 frame_idx = 0
 saved_idx = 0
- 
+
 while True:
     ret, frame = cap.read()
     if not ret:
         break
- 
+
     if frame_idx % 2 == 0:
         rotated_frame = cv2.rotate(frame, cv2.ROTATE_90_COUNTERCLOCKWISE)  # rotate CCW
-        frame_path = os.path.join(output_dir, f'gp_41{saved_idx:04d}.jpg')
+        frame_path = os.path.join(output_dir, f"gp_41{saved_idx:04d}.jpg")
         cv2.imwrite(frame_path, rotated_frame)
-        print(f'CUT_MARK{saved_idx:04d}.jpg')
+        print(f"CUT_MARK{saved_idx:04d}.jpg")
         saved_idx += 1
- 
+
     frame_idx += 1
- 
+
 cap.release()
